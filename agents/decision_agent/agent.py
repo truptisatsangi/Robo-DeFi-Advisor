@@ -32,9 +32,11 @@ class DecisionResponse(Model):
     allCandidates: Optional[List[Dict[str, Any]]]
     error: Optional[str]
     timestamp: str
+    user_intent: Optional[Dict[str, Any]] = {}
 
 decision_logic = DecisionAgent()
 
+@agent.on_message(model=RiskResponse)
 async def handle_decision_request(ctx: Context, sender: str, msg: RiskResponse):
     ctx.logger.info(f"Received risk analysis from {sender}")
     
@@ -48,7 +50,8 @@ async def handle_decision_request(ctx: Context, sender: str, msg: RiskResponse):
                 reasoningTrace=[],
                 allCandidates=[],
                 error=f"Risk analysis failed: {msg.error}",
-                timestamp=datetime.now().isoformat()
+                timestamp=datetime.now().isoformat(),
+                user_intent=msg.user_intent
             )
             ctx.logger.info(f"Decision failed: {response}")
             return
@@ -79,7 +82,8 @@ async def handle_decision_request(ctx: Context, sender: str, msg: RiskResponse):
             reasoningTrace=result.get("reasoningTrace"),
             allCandidates=result.get("allCandidates"),
             error=result.get("error"),
-            timestamp=result["timestamp"]
+            timestamp=result["timestamp"],
+            user_intent=msg.user_intent
         )
         
         ctx.logger.info(f"✅ Decision completed successfully")
@@ -96,7 +100,8 @@ async def handle_decision_request(ctx: Context, sender: str, msg: RiskResponse):
             reasoningTrace=[],
             allCandidates=[],
             error=str(e),
-            timestamp=datetime.now().isoformat()
+            timestamp=datetime.now().isoformat(),
+            user_intent=getattr(msg, 'user_intent', {})
         )
         ctx.logger.info(f"Decision failed: {response}")
 

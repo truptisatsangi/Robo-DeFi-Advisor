@@ -95,8 +95,5 @@ async def handle_discovery(ctx: Context, sender: str, msg: Message):
 
     await ctx.send(risk_agent_address, pools_message)
 
-# chat_proto = Protocol(spec=chat_protocol_spec)
-# agent.include(chat_proto, publish_manifest=True)
-
 if __name__ == "__main__": 
     agent.run()

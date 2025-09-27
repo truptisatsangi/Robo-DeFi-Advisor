@@ -51,7 +51,7 @@ class DecisionAgent:
 
             # Step 4: Select optimal pool
             optimal_pool = self.select_optimal_pool_from_scored(scored_pools)
-            print(f"🏆 Decision Agent: Selected optimal pool: {optimal_pool['id']}")
+            print(f"🏆 Decision Agent: Selected optimal pool: {optimal_pool.get('id', 'unknown')}")
 
             # Step 5: Generate reasoning trace
             reasoning_trace = self.generate_reasoning_trace(user_criteria, scored_pools, optimal_pool)
@@ -215,8 +215,8 @@ class DecisionAgent:
             "action": "score_pools",
             "input": {"poolsToScore": len(all_pools)},
             "output": {
-                "scoringFactors": list(optimal_pool["scoreFactors"].keys()),
-                "topScores": [{"id": p["id"], "score": p["totalScore"]} for p in all_pools[:3]],
+                "scoringFactors": list(optimal_pool.get("scoreFactors", {}).keys()),
+                "topScores": [{"id": p.get("id", "unknown"), "score": p.get("totalScore", 0)} for p in all_pools[:3]],
             },
             "reasoning": "Scored pools using APY (40%), Risk (30%), Liquidity (20%), and Protocol (10%) weights",
             "timestamp": datetime.now().isoformat(),
@@ -229,14 +229,14 @@ class DecisionAgent:
             "input": {"candidatePools": len(all_pools)},
             "output": {
                 "selectedPool": {
-                    "id": optimal_pool["id"],
-                    "protocol": optimal_pool["protocol"],
-                    "score": optimal_pool["totalScore"],
-                    "apy": optimal_pool["apy"],
-                    "riskScore": optimal_pool.get("riskData", {}).get("riskScore", 50),
+                    "id": optimal_pool.get("id", "unknown"),
+                    "protocol": optimal_pool.get("protocol", "unknown"),
+                    "score": optimal_pool.get("totalScore", 0),
+                    "apy": optimal_pool.get("apy", 0),
+                    "riskScore": optimal_pool.get("riskScore", 50),
                 }
             },
-            "reasoning": f"Selected {optimal_pool['id']} with highest composite score ({optimal_pool['totalScore']})",
+            "reasoning": f"Selected {optimal_pool.get('id', 'unknown')} with highest composite score ({optimal_pool.get('totalScore', 0)})",
             "timestamp": datetime.now().isoformat(),
         })
 
@@ -244,19 +244,19 @@ class DecisionAgent:
             "step": 4,
             "agent": "DecisionAgent",
             "action": "justify_selection",
-            "input": {"selectedPool": optimal_pool["id"]},
+            "input": {"selectedPool": optimal_pool.get("id", "unknown")},
             "output": {
                 "justification": {
-                    "apyAdvantage": optimal_pool["apy"],
-                    "riskAssessment": optimal_pool.get("riskData", {}).get("riskLevel", "medium"),
-                    "liquidityStrength": optimal_pool["tvl"],
-                    "protocolReliability": optimal_pool["protocol"],
+                    "apyAdvantage": optimal_pool.get("apy", 0),
+                    "riskAssessment": optimal_pool.get("riskLevel", "medium"),
+                    "liquidityStrength": optimal_pool.get("tvl", 0),
+                    "protocolReliability": optimal_pool.get("protocol", "unknown"),
                 }
             },
             "reasoning": (
-                f"Pool selected due to {optimal_pool['apy']}% APY, "
-                f"{optimal_pool.get('riskData', {}).get('riskLevel', 'medium')} risk, and strong liquidity of "
-                f"${optimal_pool['tvl']:,.0f}"
+                f"Pool selected due to {optimal_pool.get('apy', 0)}% APY, "
+                f"{optimal_pool.get('riskLevel', 'medium')} risk, and strong liquidity of "
+                f"${optimal_pool.get('tvl', 0):,.0f}"
             ),
             "timestamp": datetime.now().isoformat(),
         })

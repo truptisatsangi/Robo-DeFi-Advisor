@@ -2,7 +2,7 @@ import asyncio
 
 from uagents import Agent, Context, Protocol, Model
 
-from datetime import datetime
+from datetime import datetime, timezone
 from uuid import uuid4
 from typing import Dict, Any, List, Optional
 from uagents.setup import fund_agent_if_low
@@ -34,6 +34,7 @@ class DecisionResponse(Model):
     allCandidates: Optional[List[Dict[str, Any]]]
     error: Optional[str]
     timestamp: str
+    user_intent: Optional[Dict[str, Any]] = {}
 
 @agent.on_event("startup")
 async def startup(ctx):
@@ -54,7 +55,7 @@ chat_proto = Protocol(spec=chat_protocol_spec)
 def create_text_chat(text: str, end_session: bool = False) -> ChatMessage:
     content = [TextContent(type="text", text=text)]
     return ChatMessage(
-        timestamp=datetime.utcnow(),
+        timestamp=datetime.now(timezone.utc),
         msg_id=uuid4(),
         content=content,
     )
@@ -100,22 +101,67 @@ async def handle_decision_response(ctx: Context, sender: str, msg: DecisionRespo
     ctx.logger.info(f"Received decision response from {sender}")
     
     if msg.success and msg.optimalPool:
-        response_text = f"✅ Optimal pool found: {msg.optimalPool.get('id', 'Unknown')}\n"
-        response_text += f"Risk Score: {msg.optimalPool.get('riskScore', 'N/A')}\n"
-        response_text += f"Risk Level: {msg.optimalPool.get('riskLevel', 'N/A')}\n"
+        pool = msg.optimalPool
         
-        if msg.reasoningTrace:
-            response_text += "\nReasoning:\n"
-            for reason in msg.reasoningTrace[:3]:  # Show first 3 reasons
-                response_text += f"• {reason}\n"
+        # Create a beautiful, user-friendly response
+        response_text = "🎯 **INVESTMENT RECOMMENDATION** 🎯\n\n"
+        
+        # Pool ID (shortened for readability)
+        pool_id = pool.get('id', 'Unknown')
+        short_id = pool_id[:8] + "..." if len(pool_id) > 8 else pool_id
+        response_text += f"📊 **Recommended Pool:** `{short_id}`\n\n"
+        
+        # Risk Assessment
+        risk_score = pool.get('riskScore', 0)
+        risk_level = pool.get('riskLevel', 'unknown').replace('_', ' ').title()
+        
+        # Risk emoji based on level
+        risk_emoji = {
+            'Very Low': '🟢',
+            'Low': '🟡', 
+            'Medium': '🟠',
+            'High': '🔴',
+            'Very High': '🚨'
+        }.get(risk_level, '❓')
+        
+        response_text += f"⚠️ **Risk Assessment:** {risk_emoji} {risk_level} (Score: {risk_score}/100)\n\n"
+        
+        # Recommendations
+        recommendations = pool.get('recommendations', [])
+        if recommendations:
+            response_text += "💡 **Recommendations:**\n"
+            for rec in recommendations[:3]:  # Show top 3 recommendations
+                response_text += f"• {rec}\n"
+            response_text += "\n"
+        
+        # Investment Details
+        user_intent = msg.user_intent or {}
+        amount = user_intent.get('amount', 'N/A')
+        preference = user_intent.get('preference', 'N/A')
+        
+        response_text += f"💰 **Investment Amount:** ${amount}\n"
+        response_text += f"🎯 **Your Preference:** {preference.title()}\n\n"
+        
+        # Success message
+        if risk_score < 30:
+            response_text += "🚨 **Warning:** This pool has high risk. Consider safer alternatives.\n"
+        elif risk_score > 70:
+            response_text += "✅ **Great Choice:** This pool has low risk and is suitable for conservative investments.\n"
+        else:
+            response_text += "⚖️ **Balanced:** This pool offers moderate risk with potential for good returns.\n"
+            
+        response_text += "\n---\n*Powered by DeFi Risk Advisor*"
+        
     else:
-        response_text = f"❌ Decision failed: {msg.error or 'Unknown error'}"
+        response_text = f"❌ **Investment Analysis Failed**\n\n"
+        response_text += f"**Error:** {msg.error or 'Unknown error occurred'}\n\n"
+        response_text += "Please try again or contact support if the issue persists."
     
     # Send response back to ASI chat
     if original_chat_sender:
         response_content = [TextContent(type="text", text=response_text)]
         response_msg = ChatMessage(
-            timestamp=datetime.utcnow(),
+            timestamp=datetime.now(timezone.utc),
             msg_id=uuid4(),
             content=response_content,
         )
