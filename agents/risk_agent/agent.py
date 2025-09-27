@@ -9,10 +9,13 @@ from uagents import Agent, Context, Model
 logger = logging.getLogger(__name__)
 logging.basicConfig(level=logging.INFO)
 
+
+
 # --- CONFIG ---
 METTA_ENDPOINT = "http://localhost:5000/metta"  # adjust to your MeTTa
 DEFAULT_PORT = 8001
 DEFAULT_ENDPOINT = [f"http://localhost:{DEFAULT_PORT}/submit"]
+decision_agent_address="agent1qtrv3q6048scartdhlm26xfmrdtrs763x099pem38p3xdxy04klxq7puxyq"
 
 # ------------------------------
 # Message models for uAgents
@@ -42,10 +45,11 @@ class RiskUAgent:
         self,
         seed: str = "risk-agent-seed",
         name: str = "risk_agent",
-        port: int = DEFAULT_PORT,
-        endpoint: Optional[List[str]] = None,
+        port: int = 8002,
+        endpoint = "http://localhost:8002/submit",
         metta_endpoint: str = METTA_ENDPOINT,
     ):
+        self.address = "agent1qtsc37wq536s6xsfrp2th206t6gevkxskpx2c2d37mt4zru8zpuushp64ml"
         self.agent = Agent(name=name, seed=seed, port=port, endpoint=endpoint or DEFAULT_ENDPOINT)
         self.metta_endpoint = metta_endpoint
 
@@ -295,7 +299,7 @@ class RiskUAgent:
 
                 # Send back to sender
                 resp = RiskResponse(success=True, analysis=analyses, timestamp=datetime.now().isoformat())
-                await ctx.send(sender, resp)
+                await ctx.send(decision_agent_address, resp)
 
                 # Optionally forward to decision agent if the sender requested that pattern
                 # (You can configure forwarding via metadata in 'msg' or a known decision agent URL)
@@ -303,7 +307,7 @@ class RiskUAgent:
 
             except Exception as e:
                 logger.exception("Error handling risk request")
-                await ctx.send(sender, RiskResponse(success=False, analysis=[], timestamp=datetime.now().isoformat(), error=str(e)))
+                await ctx.send(decision_agent_address, RiskResponse(success=False, analysis=[], timestamp=datetime.now().isoformat(), error=str(e)))
 
     def run(self):
         logger.info("Starting Risk Agent...")

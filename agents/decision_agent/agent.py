@@ -33,10 +33,11 @@ class DecisionUAgent:
         self.agent = Agent(
             name="decision_agent",
             seed="decision_secret_seed",
-            port=8001,
-            endpoint=["http://localhost:8001/submit"]
+            port=8000,
+            endpoint=["http://localhost:8000/submit"]
         )
         self.decision_logic = DecisionAgent()
+        self.address = "agent1qtrv3q6048scartdhlm26xfmrdtrs763x099pem38p3xdxy04klxq7puxyq"
 
         # Attach event handlers
         self._register_handlers()

@@ -55,6 +55,15 @@ class DecisionAgent:
 
             # Step 5: Generate reasoning trace
             reasoning_trace = self.generate_reasoning_trace(user_criteria, scored_pools, optimal_pool)
+            print(f"🔍 Decision Agent: Generated reasoning trace: {reasoning_trace}")   
+            print({
+                "success": True,
+                "optimalPool": optimal_pool,
+                "allCandidates": scored_pools,
+                "reasoningTrace": reasoning_trace,
+                "criteria": user_criteria,
+                "timestamp": datetime.now().isoformat(),
+            })
 
             return {
                 "success": True,

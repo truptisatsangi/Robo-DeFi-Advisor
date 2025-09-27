@@ -1,11 +1,14 @@
 import logging
-import asyncio
 from typing import Dict, Any
 
 from uagents import Agent, Context, Protocol, Model
 from .discovery_logic import DiscoveryLogic
 
-from agents.risk_agent.agent import RiskRequest, RiskResponse, Pool 
+from agents.risk_agent.agent import RiskRequest, Pool
+
+
+risk_agent_address = "agent1qtsc37wq536s6xsfrp2th206t6gevkxskpx2c2d37mt4zru8zpuushp64ml"
+
 
 logger = logging.getLogger(__name__)
 
@@ -22,12 +25,13 @@ class DiscoveryResponse(Model):
 
 class DiscoveryUAgent:
     def __init__(self, seed: str = "discovery_seed", name: str = "discovery_agent"):
-        self.agent = Agent(name=name, seed=seed)
+        self.agent = Agent(name=name, seed=seed, port=8001, endpoint=["http://localhost:8001/submit"])
         self.logic = DiscoveryLogic()
         self.protocol = Protocol(name="discovery_protocol")
 
         self._register_handlers()
         self.agent.include(self.protocol)
+        self.address = "agent1qvk9d7hcwrv3jhazh5f7vmrzy255dvu6tpj5eg89n8ekc4f94dtm6jjxex2"
 
     def _register_handlers(self):
         @self.protocol.on_message(model=DiscoveryRequest, replies=DiscoveryResponse)
@@ -42,7 +46,7 @@ class DiscoveryUAgent:
                 risk_req = RiskRequest(pools=pool_objs)
 
                 ctx.logger.info(f"📤 Forwarding {len(pool_objs)} pools to RiskAgent...")
-                await ctx.send("risk_agent_address_here", risk_req)  # replace with real address
+                await ctx.send(risk_agent_address, risk_req) 
 
                 return DiscoveryResponse(status="success", data={"pools": pools})
 
@@ -52,7 +56,7 @@ class DiscoveryUAgent:
 
         @self.agent.on_event("startup")
         async def startup(ctx: Context):
-            ctx.logger.info(f"🚀 Discovery Agent started at {ctx.address}")
+            ctx.logger.info(f"🚀 Discovery Agent {self.agent.name} started at {self.agent.address}")
 
     async def act(self, criteria: Dict[str, Any]) -> Dict[str, Any]:
         try:
