@@ -5,7 +5,7 @@ from typing import Dict, List, Any, Optional
 from dataclasses import dataclass
 from datetime import datetime
 
-from .services.defillama_client import DeFiLlamaClient, YieldProtocol
+from services.defillama_client import DeFiLlamaClient, YieldProtocol
 
 logger = logging.getLogger(__name__)
 
@@ -116,11 +116,13 @@ class DiscoveryLogic:
     def filter_pools_by_criteria(self, pools: List[Pool], criteria: Dict[str, Any]) -> List[Pool]:
         """Filter pools according to provided criteria."""
         filtered = []
-        min_tvl = criteria.get("min_tvl", 0)
-        min_apy = criteria.get("min_apy", 0)
+        min_tvl: float = criteria.get("min_tvl", 0.0) or 0
+        min_apy: float = criteria.get("min_apy", 0.0) or 0
 
         for p in pools:
-            if p.tvl >= min_tvl and p.apy >= min_apy:
+            if p.tvl is None or p.apy is None:
+                continue
+            if p.tvl >= min_tvl and p.apy > min_apy:
                 filtered.append(p)
 
         return filtered
