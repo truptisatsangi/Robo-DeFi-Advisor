@@ -59,8 +59,17 @@ async def handle_decision_request(ctx: Context, sender: str, msg: RiskResponse):
         # Extract pool data from risk analysis
         pools_with_risk = []
         for analysis in msg.analysis:
+            # Get original pool data
+            original_data = analysis.get("originalPoolData", {})
             pool_data = {
                 "id": analysis.get("poolId"),
+                "protocol": original_data.get("protocol", "Unknown"),
+                "chain": original_data.get("chain", "Unknown"),
+                "tvl": original_data.get("tvl", 0),
+                "apy": original_data.get("apy", 0),
+                "symbol": original_data.get("symbol", "Unknown"),
+                "project": original_data.get("project", "Unknown"),
+                "url": original_data.get("url"),
                 "riskScore": analysis.get("riskScore"),
                 "riskLevel": analysis.get("riskLevel"),
                 "factors": analysis.get("factors", {}),

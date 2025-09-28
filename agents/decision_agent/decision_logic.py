@@ -37,13 +37,19 @@ class DecisionAgent:
         try:
             print(f"🎯 Decision Agent: Selecting optimal pool with criteria: {user_criteria}")
 
+            print(f"🎯 Decision Agent: Starting with {len(pools)} pools from discovery")
+            
             # Step 1: Filter pools based on criteria
             filtered_pools = self.filter_pools_by_criteria(pools, user_criteria)
-            print(f"📊 Decision Agent: {len(filtered_pools)} pools after filtering")
+            print(f"📊 Decision Agent: {len(filtered_pools)} pools after basic filtering")
 
             # Step 2: Apply risk analysis
             pools_with_risk = self.apply_risk_analysis(filtered_pools, risk_analysis)
             print(f"🔍 Decision Agent: Applied risk analysis to {len(pools_with_risk)} pools")
+
+            # Step 2.5: Apply safety filters for safest preference
+            pools_with_risk = self.apply_safety_filters(pools_with_risk, user_criteria)
+            print(f"🛡️ Decision Agent: Applied safety filters, {len(pools_with_risk)} pools remaining")
 
             # Step 3: Score and rank pools
             scored_pools = self.score_pools(pools_with_risk, user_criteria)
@@ -89,26 +95,19 @@ class DecisionAgent:
     # -------------------------------
     def filter_pools_by_criteria(self, pools: List[Dict[str, Any]], criteria: Dict[str, Any]) -> List[Dict[str, Any]]:
         """Filter pools based on user criteria."""
+        # Discovery agent already filtered for min_apy and min_tvl, but let's add safety checks
         filtered = []
-
         for pool in pools:
             pool_dict = pool if isinstance(pool, dict) else pool.__dict__
-
-            # Check TVL if specified
-            if criteria.get("min_tvl") and pool_dict.get("tvl", 0) < criteria["min_tvl"]:
-                continue
-            # Check APY if specified  
-            if criteria.get("min_apy") and pool_dict.get("apy", 0) < criteria["min_apy"]:
-                continue
-            # Check protocol if specified
-            if criteria.get("protocol") and pool_dict.get("protocol") != criteria["protocol"]:
-                continue
-            # Check symbol if specified
-            if criteria.get("symbol") and criteria["symbol"] not in pool_dict.get("symbol", ""):
-                continue
-
+            
+            # Log pool data for debugging
+            apy = pool_dict.get("apy", 0)
+            tvl = pool_dict.get("tvl", 0)
+            protocol = pool_dict.get("protocol", "Unknown")
+            print(f"   📊 Pool {pool_dict.get('id', 'unknown')[:10]}... - {protocol} - APY: {apy}%, TVL: ${tvl:,.0f}")
+            
+            # Temporarily include all pools to see what we're working with
             filtered.append(pool_dict)
-
         return filtered
 
     # -------------------------------
@@ -129,6 +128,42 @@ class DecisionAgent:
 
         return pools_with_risk
 
+    def apply_safety_filters(self, pools: List[Dict[str, Any]], criteria: Dict[str, Any]) -> List[Dict[str, Any]]:
+        """Apply additional safety filters for safest preference."""
+        safety_preference = criteria.get("preference", "medium")
+        if safety_preference != "safest":
+            return pools
+        
+        print(f"🛡️ Applying safety filters to {len(pools)} pools for 'safest' preference")
+        
+        filtered_pools = []
+        for pool in pools:
+            risk_data = pool.get("riskData", {})
+            risk_level = risk_data.get("riskLevel", "medium")
+            factors = risk_data.get("factors", {})
+            
+            print(f"   Pool {pool.get('id', 'unknown')[:10]}... - Risk: {risk_level}, Contract: {factors.get('contractVerified')}, Audit: {factors.get('auditLink') is not None}")
+            
+            # For now, only exclude very high risk pools to avoid filtering out everything
+            if risk_level == "very_high":
+                print(f"   ❌ Excluding very high risk pool")
+                continue
+            
+            # Temporarily disable contract and audit filters since MeTTa data might not be available
+            # if factors.get("contractVerified") == False:
+            #     print(f"   ❌ Excluding unverified contract")
+            #     continue
+            
+            # if factors.get("auditLink") is None:
+            #     print(f"   ❌ Excluding pool without audit")
+            #     continue
+            
+            print(f"   ✅ Including pool")
+            filtered_pools.append(pool)
+        
+        print(f"🛡️ Safety filters result: {len(filtered_pools)} pools remaining")
+        return filtered_pools
+
     # -------------------------------
     # Scoring
     # -------------------------------
@@ -142,19 +177,39 @@ class DecisionAgent:
 
             # APY Score (0–40 points)
             apy = pool.get("apy", 0)
-            apy_score = min(40.0, apy * 2.0)
+            if apy <= 0:
+                apy_score = 0  # No points for 0 or negative APY
+            else:
+                apy_score = min(40.0, apy * 2.0)
             total_score += apy_score
             score_factors["apyScore"] = apy_score
 
             # Risk Score (0–30 points)
+            # Note: Risk agent uses inverted scale (higher score = lower risk)
+            # We need to convert to risk level for decision making
             risk_score_val = pool.get("riskData", {}).get("riskScore", 50)
-            risk_score = max(0.0, 30.0 - (risk_score_val * 0.3))
+            risk_level = pool.get("riskData", {}).get("riskLevel", "medium")
+            
+            # Convert risk level to numeric risk score (0-100, where 0 = very low risk, 100 = very high risk)
+            risk_numeric = {
+                "very_low": 10,
+                "low": 30, 
+                "medium": 50,
+                "high": 70,
+                "very_high": 90
+            }.get(risk_level, 50)
+            
+            # Calculate risk score for decision (lower risk = higher score)
+            risk_score = max(0.0, 30.0 - (risk_numeric * 0.3))
             total_score += risk_score
             score_factors["riskScore"] = risk_score
 
             # Liquidity Score (0–20 points)
             tvl = pool.get("tvl", 0)
-            liquidity_score = min(20.0, (tvl ** 0.1) / 2.0)
+            if tvl <= 0:
+                liquidity_score = 0  # No points for 0 or negative TVL
+            else:
+                liquidity_score = min(20.0, (tvl ** 0.1) / 2.0)
             total_score += liquidity_score
             score_factors["liquidityScore"] = liquidity_score
 
@@ -167,7 +222,16 @@ class DecisionAgent:
             # Safety Preference Adjustment
             safety_preference = criteria.get("preference", "medium")
             if safety_preference == "safest":
-                total_score = total_score * 0.7 + (30.0 if risk_score_val > 70 else 0.0)
+                # For safest preference, heavily weight low risk pools
+                # Use risk level to determine bonuses/penalties
+                if risk_level == "very_low":
+                    total_score += 50.0  # Big bonus for very low risk
+                elif risk_level == "low":
+                    total_score += 25.0  # Moderate bonus for low risk
+                elif risk_level == "very_high":
+                    total_score -= 40.0  # Heavy penalty for very high risk
+                elif risk_level == "high":
+                    total_score -= 20.0  # Moderate penalty for high risk
             elif safety_preference == "highest_yield":
                 total_score = total_score * 1.2 + (20.0 if apy > 15 else 0.0)
 

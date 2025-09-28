@@ -111,9 +111,19 @@ async def handle_decision_response(ctx: Context, sender: str, msg: DecisionRespo
         short_id = pool_id[:8] + "..." if len(pool_id) > 8 else pool_id
         response_text += f"📊 **Recommended Pool:** `{short_id}`\n\n"
         
+        # Pool Details
+        apy = pool.get('apy', 0)
+        tvl = pool.get('tvl', 0)
+        protocol = pool.get('protocol', 'Unknown')
+        
+        response_text += f"🏦 **Protocol:** {protocol}\n"
+        response_text += f"📈 **APY:** {apy}%\n"
+        response_text += f"💧 **Total Value Locked:** ${tvl:,.0f}\n\n"
+        
         # Risk Assessment
-        risk_score = pool.get('riskScore', 0)
-        risk_level = pool.get('riskLevel', 'unknown').replace('_', ' ').title()
+        risk_data = pool.get('riskData', {})
+        risk_score = risk_data.get('riskScore', 0)
+        risk_level = risk_data.get('riskLevel', 'unknown').replace('_', ' ').title()
         
         # Risk emoji based on level
         risk_emoji = {
@@ -126,8 +136,22 @@ async def handle_decision_response(ctx: Context, sender: str, msg: DecisionRespo
         
         response_text += f"⚠️ **Risk Assessment:** {risk_emoji} {risk_level} (Score: {risk_score}/100)\n\n"
         
+        # Pool Security Details
+        factors = risk_data.get('factors', {})
+        response_text += "🔒 **Security Details:**\n"
+        contract_verified = factors.get('contractVerified', False)
+        audit_link = factors.get('auditLink', None)
+        response_text += f"• Contract Verified: {'✅ Yes' if contract_verified else '❌ No'}\n"
+        response_text += f"• Security Audit: {'✅ Available' if audit_link else '❌ Not Found'}\n"
+        
+        if factors.get('holderConcentration'):
+            concentration = factors['holderConcentration']
+            response_text += f"• Holder Concentration: {concentration:.1%}\n"
+        
+        response_text += "\n"
+        
         # Recommendations
-        recommendations = pool.get('recommendations', [])
+        recommendations = risk_data.get('recommendations', [])
         if recommendations:
             response_text += "💡 **Recommendations:**\n"
             for rec in recommendations[:3]:  # Show top 3 recommendations
@@ -139,13 +163,13 @@ async def handle_decision_response(ctx: Context, sender: str, msg: DecisionRespo
         amount = user_intent.get('amount', 'N/A')
         preference = user_intent.get('preference', 'N/A')
         
-        response_text += f"💰 **Investment Amount:** ${amount}\n"
-        response_text += f"🎯 **Your Preference:** {preference.title()}\n\n"
+        response_text += f"💰 **Your Investment:** ${amount}\n"
+        response_text += f"🎯 **Your Preference:** {preference.title() if preference else 'Not specified'}\n\n"
         
-        # Success message
-        if risk_score < 30:
+        # Success message based on risk level
+        if risk_level.lower() in ['high', 'very high']:
             response_text += "🚨 **Warning:** This pool has high risk. Consider safer alternatives.\n"
-        elif risk_score > 70:
+        elif risk_level.lower() in ['very low', 'low']:
             response_text += "✅ **Great Choice:** This pool has low risk and is suitable for conservative investments.\n"
         else:
             response_text += "⚖️ **Balanced:** This pool offers moderate risk with potential for good returns.\n"

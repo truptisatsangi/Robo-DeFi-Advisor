@@ -141,7 +141,9 @@ async def analyze_pool(pool: Dict[str, Any]) -> Dict[str, Any]:
             "contractVerification": cv.get("result"),
             "auditStatus": audit.get("result"),
             "holderConcentration": conc.get("result")
-        })
+        }),
+        # Include original pool data
+        "originalPoolData": metrics
     }
 
     # Optionally persist back to MeTTa (non-blocking)

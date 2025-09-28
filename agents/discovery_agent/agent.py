@@ -85,8 +85,8 @@ async def handle_discovery(ctx: Context, sender: str, msg: Message):
     ctx.logger.info(f"Discovery request: {user_intent}")
     pools = await logic.discover_pools_async(user_intent)
     
-    # Create list of PoolListMessage objects
-    pool_objs = [PoolListMessage(pool_id=p["id"], metrics=p.get("metrics")) for p in pools]
+    # Create list of PoolListMessage objects with full pool data
+    pool_objs = [PoolListMessage(pool_id=p["id"], metrics=p) for p in pools]
     
     # Wrap in DiscoveryResponse
     pools_message = DiscoveryResponse(pools=pool_objs, user_intent=user_intent)

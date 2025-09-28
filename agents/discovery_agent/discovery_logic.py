@@ -118,18 +118,64 @@ class DiscoveryLogic:
         filtered = []
         min_tvl: float = criteria.get("min_tvl", 0.0) or 0
         min_apy: float = criteria.get("min_apy", 0.0) or 0
+        preference = criteria.get("preference", "medium")
 
         for p in pools:
             if p.tvl is None or p.apy is None:
                 continue
-            if p.tvl >= min_tvl and p.apy > min_apy:
-                filtered.append(p)
+            if p.tvl < min_tvl or p.apy < min_apy:
+                continue
+                
+            # Additional filtering for safest preference
+            if preference == "safest":
+                # Only include well-known, established protocols for safest
+                safe_protocols = [
+                    "uniswap", "aave", "compound", "makerdao", "lido", 
+                    "curve", "balancer", "yearn", "convex", "frax"
+                ]
+                if not any(safe in p.protocol.lower() for safe in safe_protocols):
+                    continue
+                    
+                # Require higher TVL for safest pools
+                if p.tvl < 10000000:  # $10M minimum for safest
+                    continue
+
+            filtered.append(p)
 
         return filtered
 
-    def rank_pools(self, pools: List[Pool], top_n: int = 5) -> List[Pool]:
-        """Rank pools by APY (descending)."""
-        return sorted(pools, key=lambda p: p.apy, reverse=True)[:top_n]
+    def rank_pools(self, pools: List[Pool], criteria: Dict[str, Any], top_n: int = 5) -> List[Pool]:
+        """Rank pools based on criteria."""
+        preference = criteria.get("preference", "medium")
+        
+        if preference == "safest":
+            # For safest, prioritize established protocols with good TVL over high APY
+            def safety_score(pool):
+                # Base score from TVL (higher TVL = safer)
+                tvl_score = min(100, (pool.tvl / 1000000000) * 50)  # Max 50 points for $1B+ TVL
+                
+                # Protocol safety bonus
+                protocol_bonus = 0
+                if "uniswap" in pool.protocol.lower():
+                    protocol_bonus = 30
+                elif "aave" in pool.protocol.lower():
+                    protocol_bonus = 25
+                elif "compound" in pool.protocol.lower():
+                    protocol_bonus = 25
+                elif "lido" in pool.protocol.lower():
+                    protocol_bonus = 20
+                elif "curve" in pool.protocol.lower():
+                    protocol_bonus = 20
+                
+                # APY bonus (but less important for safety)
+                apy_bonus = min(20, pool.apy * 2)  # Max 20 points for 10%+ APY
+                
+                return tvl_score + protocol_bonus + apy_bonus
+            
+            return sorted(pools, key=safety_score, reverse=True)[:top_n]
+        else:
+            # For other preferences, rank by APY
+            return sorted(pools, key=lambda p: p.apy, reverse=True)[:top_n]
 
     # ------------------------------
     # Orchestration
@@ -154,7 +200,7 @@ class DiscoveryLogic:
 
         # Filter + rank
         filtered = self.filter_pools_by_criteria(all_pools, criteria)
-        ranked = self.rank_pools(filtered, top_n=criteria.get("top_n", 5))
+        ranked = self.rank_pools(filtered, criteria, top_n=criteria.get("top_n", 5))
 
         # Return just the list of pool dictionaries for the agent
         return [p.__dict__ for p in ranked]
