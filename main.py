@@ -1,5 +1,3 @@
-import asyncio
-
 from uagents import Agent, Context, Protocol, Model
 
 from datetime import datetime, timezone

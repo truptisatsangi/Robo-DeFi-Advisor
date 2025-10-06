@@ -5,10 +5,12 @@ from typing import Dict, Any, Optional, List
 from openai import OpenAI
 from uagents import Agent, Context, Model, Protocol
 from discovery_logic import DiscoveryLogic
+from dotenv import load_dotenv
 
 risk_agent_address = "agent1qfvk3m82xljka6y22447dufg6hnx0zuqejplxmxfvwscsq9qwr2cy0u74hw"
 logger = logging.getLogger(__name__)
 
+load_dotenv(override=True)
 class PoolListMessage(Model):
     pool_id: str
     metrics: Optional[Dict[str, Any]] = None
