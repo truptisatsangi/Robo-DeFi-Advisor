@@ -7,7 +7,8 @@ from datetime import datetime
 from uagents import Agent, Context, Model
 from pydantic import Field
 import sys
-sys.path.append('/Users/truptisatsangi/Desktop/Robo-DeFi-Advisor/agents')
+import os
+sys.path.append(os.path.join(os.path.dirname(__file__), '..'))
 from decision_agent.agent import handle_decision_request 
 
 
@@ -16,7 +17,7 @@ logging.basicConfig(level=logging.INFO)
 
 # --- CONFIG ---
 METTA_ENDPOINT = "https://beta-lipia-api.singularitynet.io/metta-api" 
-starting_gent_address = "agent1q26a60535xkty6hfq6xkwp573gd9d2lradhexvps2d9w5p552qf85qnrzjk"
+starting_agent_address = "agent1q26a60535xkty6hfq6xkwp573gd9d2lradhexvps2d9w5p552qf85qnrzjk"
 decision_agent_address="agent1qtrv3q6048scartdhlm26xfmrdtrs763x099pem38p3xdxy04klxq7puxyq"
 
 agent = Agent(name="risk-agent-seed", seed="risk_agent_seed", port=8002, endpoint="http://localhost:8002/submit")
@@ -67,7 +68,7 @@ async def risk_analysis(
         )
 
         # FUTURE SCOPE: Send to decision agent
-        await handle_decision_request(ctx, starting_gent_address, response)
+        await handle_decision_request(ctx, starting_agent_address, response)
 
     except Exception as e:
         logger.exception("Error in risk_analysis")
@@ -79,10 +80,11 @@ async def risk_analysis(
             user_intent=msg.user_intent,
             timestamp = datetime.now().isoformat(),
         )
-        await handle_decision_request(ctx, starting_gent_address, error_response)
+        await handle_decision_request(ctx, starting_agent_address, error_response)
 # ------------------------------
 # Internal: analyze one pool
 # ------------------------------
+
 async def analyze_pool(pool: Dict[str, Any]) -> Dict[str, Any]:
     pool_id = pool.get("pool_id")
     metrics = pool.get("metrics", {}) or {}
@@ -165,6 +167,7 @@ async def query_metta(fact: str) -> Dict[str, Any]:
         async with aiohttp.ClientSession() as session:
             async with session.post(f"{METTA_ENDPOINT}/query", json={"fact": fact}, headers={"Content-Type": "application/json"}) as resp:
                 if resp.status == 200:
+                    logger.info(f"Metta response {resp}")
                     return await resp.json()
                 else:
                     logger.debug(f"MeTTa returned {resp.status} for {fact}")

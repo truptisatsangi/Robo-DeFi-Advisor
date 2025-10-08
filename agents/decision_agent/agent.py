@@ -28,6 +28,7 @@ class RiskResponse(Model):
 class DecisionResponse(Model):
     success: bool
     optimalPool: Optional[Dict[str, Any]]
+    alternatives: Optional[List[Dict[str, Any]]]
     reasoningTrace: Optional[List[Dict[str, Any]]]
     allCandidates: Optional[List[Dict[str, Any]]]
     error: Optional[str]
@@ -47,6 +48,7 @@ async def handle_decision_request(ctx: Context, sender: str, msg: RiskResponse):
             response = DecisionResponse(
                 success=False,
                 optimalPool=None,
+                alternatives=[],
                 reasoningTrace=[],
                 allCandidates=[],
                 error=f"Risk analysis failed: {msg.error}",
@@ -88,6 +90,7 @@ async def handle_decision_request(ctx: Context, sender: str, msg: RiskResponse):
         response = DecisionResponse(
             success=result["success"],
             optimalPool=result.get("optimalPool"),
+            alternatives=result.get("alternatives"),
             reasoningTrace=result.get("reasoningTrace"),
             allCandidates=result.get("allCandidates"),
             error=result.get("error"),
@@ -106,6 +109,7 @@ async def handle_decision_request(ctx: Context, sender: str, msg: RiskResponse):
         response = DecisionResponse(
             success=False,
             optimalPool=None,
+            alternatives=[],
             reasoningTrace=[],
             allCandidates=[],
             error=str(e),

@@ -37,7 +37,7 @@ class DecisionAgent:
         try:
             print(f"🎯 Decision Agent: Selecting optimal pool with criteria: {user_criteria}")
 
-            print(f"🎯 Decision Agent: Starting with {len(pools)} pools from discovery")
+            print(f"🎯 Decision Agent: Starting with {len(pools)} pools from risk agent")
             
             # Step 1: Filter pools based on criteria
             filtered_pools = self.filter_pools_by_criteria(pools, user_criteria)
@@ -62,18 +62,15 @@ class DecisionAgent:
             # Step 5: Generate reasoning trace
             reasoning_trace = self.generate_reasoning_trace(user_criteria, scored_pools, optimal_pool)
             print(f"🔍 Decision Agent: Generated reasoning trace: {reasoning_trace}")   
-            print({
-                "success": True,
-                "optimalPool": optimal_pool,
-                "allCandidates": scored_pools,
-                "reasoningTrace": reasoning_trace,
-                "criteria": user_criteria,
-                "timestamp": datetime.now().isoformat(),
-            })
+
+            # Get top 3 pools for recommendations (1 optimal + 2 alternatives)
+            top_3_pools = scored_pools[:3] if len(scored_pools) >= 3 else scored_pools
+            alternatives = top_3_pools[1:] if len(top_3_pools) > 1 else []
 
             return {
                 "success": True,
                 "optimalPool": optimal_pool,
+                "alternatives": alternatives,
                 "allCandidates": scored_pools,
                 "reasoningTrace": reasoning_trace,
                 "criteria": user_criteria,

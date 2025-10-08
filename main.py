@@ -28,6 +28,7 @@ class Message(Model):
 class DecisionResponse(Model):
     success: bool
     optimalPool: Optional[Dict[str, Any]]
+    alternatives: Optional[List[Dict[str, Any]]]
     reasoningTrace: Optional[List[Dict[str, Any]]]
     allCandidates: Optional[List[Dict[str, Any]]]
     error: Optional[str]
@@ -57,6 +58,165 @@ def create_text_chat(text: str, end_session: bool = False) -> ChatMessage:
         msg_id=uuid4(),
         content=content,
     )
+
+# Helper function to generate protocol-specific transaction links
+def _get_transaction_link(pool: Dict[str, Any]) -> str:
+    """Generate direct transaction link for the selected pool."""
+    protocol = pool.get("protocol", "").lower()
+    pool_id = pool.get("id", "")
+    url = pool.get("url", "")
+    
+    # If pool already has a URL, use it
+    if url:
+        return url
+    
+    # Protocol-specific transaction links
+    transaction_links = {
+        "uniswap": {
+            "base_url": "https://app.uniswap.org/explore/pools/ethereum/",
+            "fallback_url": "https://app.uniswap.org/explore/pools"
+        },
+        "uniswap-v2": {
+            "base_url": "https://v2.info.uniswap.org/pair/",
+            "fallback_url": "https://app.uniswap.org/explore/pools"
+        },
+        "uniswap v3": {
+            "base_url": "https://app.uniswap.org/explore/pools/ethereum/",
+            "fallback_url": "https://app.uniswap.org/explore/pools"
+        },
+        "compound": {
+            "base_url": "https://app.compound.finance/",
+            "fallback_url": "https://app.compound.finance/"
+        },
+        "aave": {
+            "base_url": "https://app.aave.com/reserve-overview/?underlyingAsset=",
+            "fallback_url": "https://app.aave.com/"
+        },
+        "curve": {
+            "base_url": "https://curve.fi/#/ethereum/pools/",
+            "fallback_url": "https://curve.fi/"
+        },
+        "balancer": {
+            "base_url": "https://app.balancer.fi/#/ethereum/pool/",
+            "fallback_url": "https://app.balancer.fi/"
+        },
+        "pendle": {
+            "base_url": "https://app.pendle.finance/trade/pools/",
+            "fallback_url": "https://app.pendle.finance/"
+        },
+        "lido": {
+            "base_url": "https://stake.lido.fi/",
+            "fallback_url": "https://stake.lido.fi/"
+        },
+        "maple": {
+            "base_url": "https://app.maple.finance/lend/pool/",
+            "fallback_url": "https://app.maple.finance/"
+        },
+        "sparklend": {
+            "base_url": "https://app.spark.fi/reserve-overview/?underlyingAsset=",
+            "fallback_url": "https://app.spark.fi/"
+        },
+        "justlend": {
+            "base_url": "https://justlend.org/#/market/",
+            "fallback_url": "https://justlend.org/"
+        },
+        "raydium": {
+            "base_url": "https://raydium.io/liquidity/pool/",
+            "fallback_url": "https://raydium.io/swap/"
+        },
+        "hyperion": {
+            "base_url": "https://app.hyperion.finance/pool/",
+            "fallback_url": "https://app.hyperion.finance/"
+        },
+        "spectra": {
+            "base_url": "https://app.spectra.finance/pool/",
+            "fallback_url": "https://app.spectra.finance/"
+        },
+        "spectra-v2": {
+            "base_url": "https://app.spectra.finance/pool/",
+            "fallback_url": "https://app.spectra.finance/"
+        }
+    }
+    
+    # Get the appropriate link for the protocol
+    if protocol in transaction_links:
+        link_info = transaction_links[protocol]
+        
+        # Try to construct specific pool link with pool ID
+        if pool_id:
+            return f"{link_info['base_url']}{pool_id}"
+        else:
+            return link_info["fallback_url"]
+    
+    # Fallback to DeFiLlama for unknown protocols
+    if protocol:
+        return f"https://defillama.com/protocol/{protocol.replace(' ', '-')}"
+    
+    return None
+
+# Helper function to format pool information
+def format_pool_info(pool: Dict[str, Any], is_alternative: bool = False) -> str:
+    """Format pool information with all details and links."""
+    prefix = "🔄 **Alternative Pool:**" if is_alternative else "📊 **Recommended Pool:**"
+    
+    # Pool ID (shortened for readability)
+    pool_id = pool.get('id', 'Unknown')
+    short_id = pool_id[:8] + "..." if len(pool_id) > 8 else pool_id
+    
+    # Pool Details
+    apy = pool.get('apy', 0)
+    tvl = pool.get('tvl', 0)
+    protocol = pool.get('protocol', 'Unknown')
+    url = pool.get('url', '')
+    
+    # Risk Assessment
+    risk_data = pool.get('riskData', {})
+    risk_score = risk_data.get('riskScore', 0)
+    risk_level = risk_data.get('riskLevel', 'unknown').replace('_', ' ').title()
+    
+    # Risk emoji based on level
+    risk_emoji = {
+        'Very Low': '🟢',
+        'Low': '🟡', 
+        'Medium': '🟠',
+        'High': '🔴',
+        'Very High': '🚨'
+    }.get(risk_level, '❓')
+    
+    # Pool Security Details
+    factors = risk_data.get('factors', {})
+    contract_verified = factors.get('contractVerified', False)
+    audit_link = factors.get('auditLink', None)
+    
+    # Build the formatted string
+    formatted = f"{prefix} `{short_id}`\n\n"
+    formatted += f"🏦 **Protocol:** {protocol}\n"
+    formatted += f"📈 **APY:** {apy}%\n"
+    formatted += f"💧 **Total Value Locked:** ${tvl:,.0f}\n"
+    formatted += f"⚠️ **Risk Assessment:** {risk_emoji} {risk_level} (Score: {risk_score}/100)\n\n"
+    
+    formatted += "🔒 **Security Details:**\n"
+    formatted += f"• Contract Verified: {'✅ Yes' if contract_verified else '❌ No'}\n"
+    formatted += f"• Security Audit: {'✅ Available' if audit_link else '❌ Not Found'}\n"
+    
+    if factors.get('holderConcentration'):
+        concentration = factors['holderConcentration']
+        formatted += f"• Holder Concentration: {concentration:.1%}\n"
+    
+    # Add link if available
+    if url:
+        formatted += f"\n🔗 **Pool Link:** {url}\n"
+    else:
+        formatted += f"\n🔗 **Pool Link:** Not available\n"
+    
+    # Add recommendations
+    recommendations = risk_data.get('recommendations', [])
+    if recommendations:
+        formatted += "\n💡 **Recommendations:**\n"
+        for rec in recommendations[:3]:  # Show top 3 recommendations
+            formatted += f"• {rec}\n"
+    
+    return formatted
 
 
 # Handle incoming chat messages
@@ -100,61 +260,13 @@ async def handle_decision_response(ctx: Context, sender: str, msg: DecisionRespo
     
     if msg.success and msg.optimalPool:
         pool = msg.optimalPool
+        alternatives = msg.alternatives or []
         
         # Create a beautiful, user-friendly response
         response_text = "🎯 **INVESTMENT RECOMMENDATION** 🎯\n\n"
         
-        # Pool ID (shortened for readability)
-        pool_id = pool.get('id', 'Unknown')
-        short_id = pool_id[:8] + "..." if len(pool_id) > 8 else pool_id
-        response_text += f"📊 **Recommended Pool:** `{short_id}`\n\n"
-        
-        # Pool Details
-        apy = pool.get('apy', 0)
-        tvl = pool.get('tvl', 0)
-        protocol = pool.get('protocol', 'Unknown')
-        
-        response_text += f"🏦 **Protocol:** {protocol}\n"
-        response_text += f"📈 **APY:** {apy}%\n"
-        response_text += f"💧 **Total Value Locked:** ${tvl:,.0f}\n\n"
-        
-        # Risk Assessment
-        risk_data = pool.get('riskData', {})
-        risk_score = risk_data.get('riskScore', 0)
-        risk_level = risk_data.get('riskLevel', 'unknown').replace('_', ' ').title()
-        
-        # Risk emoji based on level
-        risk_emoji = {
-            'Very Low': '🟢',
-            'Low': '🟡', 
-            'Medium': '🟠',
-            'High': '🔴',
-            'Very High': '🚨'
-        }.get(risk_level, '❓')
-        
-        response_text += f"⚠️ **Risk Assessment:** {risk_emoji} {risk_level} (Score: {risk_score}/100)\n\n"
-        
-        # Pool Security Details
-        factors = risk_data.get('factors', {})
-        response_text += "🔒 **Security Details:**\n"
-        contract_verified = factors.get('contractVerified', False)
-        audit_link = factors.get('auditLink', None)
-        response_text += f"• Contract Verified: {'✅ Yes' if contract_verified else '❌ No'}\n"
-        response_text += f"• Security Audit: {'✅ Available' if audit_link else '❌ Not Found'}\n"
-        
-        if factors.get('holderConcentration'):
-            concentration = factors['holderConcentration']
-            response_text += f"• Holder Concentration: {concentration:.1%}\n"
-        
-        response_text += "\n"
-        
-        # Recommendations
-        recommendations = risk_data.get('recommendations', [])
-        if recommendations:
-            response_text += "💡 **Recommendations:**\n"
-            for rec in recommendations[:3]:  # Show top 3 recommendations
-                response_text += f"• {rec}\n"
-            response_text += "\n"
+        # Add recommended pool
+        response_text += format_pool_info(pool, is_alternative=False)
         
         # Investment Details
         user_intent = msg.user_intent or {}
@@ -164,15 +276,26 @@ async def handle_decision_response(ctx: Context, sender: str, msg: DecisionRespo
         response_text += f"💰 **Your Investment:** ${amount}\n"
         response_text += f"🎯 **Your Preference:** {preference.title() if preference else 'Not specified'}\n\n"
         
-        # Success message based on risk level
+        # Risk assessment message
+        risk_data = pool.get('riskData', {})
+        risk_level = risk_data.get('riskLevel', 'unknown').replace('_', ' ').title()
+        
         if risk_level.lower() in ['high', 'very high']:
-            response_text += "🚨 **Warning:** This pool has high risk. Consider safer alternatives.\n"
+            response_text += "🚨 **Warning:** This pool has high risk. Consider safer alternatives below.\n\n"
         elif risk_level.lower() in ['very low', 'low']:
-            response_text += "✅ **Great Choice:** This pool has low risk and is suitable for conservative investments.\n"
+            response_text += "✅ **Great Choice:** This pool has low risk and is suitable for conservative investments.\n\n"
         else:
-            response_text += "⚖️ **Balanced:** This pool offers moderate risk with potential for good returns.\n"
-            
-        response_text += "\n---\n*Powered by DeFi Risk Advisor*"
+            response_text += "⚖️ **Balanced:** This pool offers moderate risk with potential for good returns.\n\n"
+        
+        # Add alternatives if available
+        if alternatives:
+            response_text += "🔄 **ALTERNATIVE OPTIONS** 🔄\n\n"
+            for i, alt_pool in enumerate(alternatives[:2], 1):  # Show max 2 alternatives
+                response_text += f"**Option {i}:**\n"
+                response_text += format_pool_info(alt_pool, is_alternative=True)
+                response_text += "\n" + "─" * 50 + "\n\n"
+        
+        response_text += "---\n*Powered by DeFi Risk Advisor*"
         
     else:
         response_text = f"❌ **Investment Analysis Failed**\n\n"
