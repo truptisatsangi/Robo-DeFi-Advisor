@@ -142,7 +142,8 @@ async def analyze_pool(pool: Dict[str, Any]) -> Dict[str, Any]:
         "recommendations": generate_recommendations(risk_score_val, {
             "contractVerification": cv.get("result"),
             "auditStatus": audit.get("result"),
-            "holderConcentration": conc.get("result")
+            "holderConcentration": conc.get("result"),
+            "poolMetrics": metrics
         }),
         # Include original pool data
         "originalPoolData": metrics
@@ -236,17 +237,43 @@ def calculate_confidence(confidences: List[float]) -> float:
 
 def generate_recommendations(risk_score: float, factors: Dict[str, Any]) -> List[str]:
     recommendations: List[str] = []
-    if not factors.get("contractVerification"):
-        recommendations.append("⚠️ Contract not verified - high risk")
-    if not factors.get("auditStatus"):
-        recommendations.append("🔍 No audit found - consider alternative pools")
-    if factors.get("holderConcentration") and factors["holderConcentration"] > 0.3:
-        recommendations.append("📊 High holder concentration - potential manipulation risk")
+    
+    # Get pool metrics
+    pool_metrics = factors.get("poolMetrics", {})
+    tvl = pool_metrics.get("tvl", 0)
+    apy = pool_metrics.get("apy", 0)
+    protocol = pool_metrics.get("protocol", "").lower()
+    
+    # Risk-based recommendations
     if risk_score < 30:
-        recommendations.append("🚨 High risk pool - consider safer alternatives")
+        recommendations.append("🚨 High risk pool - only invest what you can afford to lose")
+        recommendations.append("💡 Consider diversifying across multiple pools")
     elif risk_score > 70:
         recommendations.append("✅ Low risk pool - suitable for conservative investments")
-    return recommendations
+        recommendations.append("📈 Good choice for long-term holdings")
+    else:
+        recommendations.append("⚖️ Medium risk - suitable for balanced portfolios")
+    
+    # TVL-based recommendations
+    if tvl < 1_000_000:
+        recommendations.append("⚠️ Low liquidity - may experience slippage on large trades")
+    elif tvl > 100_000_000:
+        recommendations.append("💧 High liquidity - excellent for large transactions")
+    
+    # APY-based recommendations
+    if apy > 50:
+        recommendations.append("📊 Very high APY - verify sustainability and potential IL risks")
+    elif apy > 20:
+        recommendations.append("💰 High yields available - monitor for impermanent loss")
+    
+    # Protocol-based recommendations
+    established = ["uniswap", "aave", "compound", "curve", "balancer", "lido"]
+    if any(est in protocol for est in established):
+        recommendations.append("🏦 Established protocol with strong track record")
+    else:
+        recommendations.append("🔍 Research protocol thoroughly before investing")
+    
+    return recommendations[:4]  # Limit to 4 most relevant recommendations
 
 
 if __name__ == "__main__": 

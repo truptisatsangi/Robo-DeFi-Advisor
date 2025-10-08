@@ -159,15 +159,18 @@ def format_pool_info(pool: Dict[str, Any], is_alternative: bool = False) -> str:
     """Format pool information with all details and links."""
     prefix = "🔄 **Alternative Pool:**" if is_alternative else "📊 **Recommended Pool:**"
     
-    # Pool ID (shortened for readability)
+    # Pool ID (full address)
     pool_id = pool.get('id', 'Unknown')
-    short_id = pool_id[:8] + "..." if len(pool_id) > 8 else pool_id
     
     # Pool Details
     apy = pool.get('apy', 0)
     tvl = pool.get('tvl', 0)
     protocol = pool.get('protocol', 'Unknown')
-    url = pool.get('url', '')
+    symbol = pool.get('symbol', 'Unknown')
+    chain = pool.get('chain', 'ethereum')
+    
+    # Get proper transaction link
+    pool_link = _get_transaction_link(pool)
     
     # Risk Assessment
     risk_data = pool.get('riskData', {})
@@ -185,29 +188,53 @@ def format_pool_info(pool: Dict[str, Any], is_alternative: bool = False) -> str:
     
     # Pool Security Details
     factors = risk_data.get('factors', {})
-    contract_verified = factors.get('contractVerified', False)
-    audit_link = factors.get('auditLink', None)
     
     # Build the formatted string
-    formatted = f"{prefix} `{short_id}`\n\n"
+    formatted = f"{prefix}\n\n"
+    formatted += f"📝 **Pool ID:** `{pool_id}`\n"
+    formatted += f"💱 **Symbol:** {symbol}\n"
     formatted += f"🏦 **Protocol:** {protocol}\n"
-    formatted += f"📈 **APY:** {apy}%\n"
+    formatted += f"⛓️ **Chain:** {chain.capitalize()}\n"
+    formatted += f"📈 **APY:** {apy:.2f}%\n"
     formatted += f"💧 **Total Value Locked:** ${tvl:,.0f}\n"
     formatted += f"⚠️ **Risk Assessment:** {risk_emoji} {risk_level} (Score: {risk_score}/100)\n\n"
     
-    formatted += "🔒 **Security Details:**\n"
-    formatted += f"• Contract Verified: {'✅ Yes' if contract_verified else '❌ No'}\n"
-    formatted += f"• Security Audit: {'✅ Available' if audit_link else '❌ Not Found'}\n"
+    # Security metrics based on available data
+    formatted += "🔒 **Security Metrics:**\n"
     
-    if factors.get('holderConcentration'):
-        concentration = factors['holderConcentration']
-        formatted += f"• Holder Concentration: {concentration:.1%}\n"
+    # TVL as security indicator
+    if tvl > 100_000_000:
+        formatted += f"• Liquidity Depth: 🟢 Excellent (${tvl:,.0f})\n"
+    elif tvl > 10_000_000:
+        formatted += f"• Liquidity Depth: 🟡 Good (${tvl:,.0f})\n"
+    elif tvl > 1_000_000:
+        formatted += f"• Liquidity Depth: 🟠 Moderate (${tvl:,.0f})\n"
+    else:
+        formatted += f"• Liquidity Depth: 🔴 Low (${tvl:,.0f})\n"
     
-    # Add link if available
-    if url:
-        formatted += f"\n🔗 **Pool Link:** {url}\n"
+    # Protocol reputation
+    established_protocols = ["uniswap", "aave", "compound", "curve", "balancer", "lido", "makerdao", "yearn", "convex", "frax"]
+    protocol_lower = protocol.lower()
+    if any(est in protocol_lower for est in established_protocols):
+        formatted += f"• Protocol Reputation: 🟢 Established & Audited\n"
+    else:
+        formatted += f"• Protocol Reputation: 🟡 Verify independently\n"
+    
+    # Risk level as security indicator
+    if risk_level.lower() in ['very low', 'low']:
+        formatted += f"• Risk Level: 🟢 Low Risk\n"
+    elif risk_level.lower() == 'medium':
+        formatted += f"• Risk Level: 🟡 Medium Risk\n"
+    else:
+        formatted += f"• Risk Level: 🔴 High Risk\n"
+    
+    # Add link
+    if pool_link:
+        formatted += f"\n🔗 **Pool Link:** {pool_link}\n"
+        formatted += f"📊 **View on Etherscan:** https://etherscan.io/address/{pool_id}\n"
     else:
         formatted += f"\n🔗 **Pool Link:** Not available\n"
+        formatted += f"📊 **View on Etherscan:** https://etherscan.io/address/{pool_id}\n"
     
     # Add recommendations
     recommendations = risk_data.get('recommendations', [])
