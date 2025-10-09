@@ -72,8 +72,12 @@ async def handle_decision_request(ctx: Context, sender: str, msg: RiskResponse):
                 "symbol": original_data.get("symbol", "Unknown"),
                 "project": original_data.get("project", "Unknown"),
                 "url": original_data.get("url"),
+                "poolMeta": original_data.get("poolMeta"),
+                "underlyingTokens": original_data.get("underlyingTokens", []),
+                "rewardTokens": original_data.get("rewardTokens", []),
                 "riskScore": analysis.get("riskScore"),
                 "riskLevel": analysis.get("riskLevel"),
+                "riskReasoning": analysis.get("riskReasoning", ""),
                 "factors": analysis.get("factors", {}),
                 "confidence": analysis.get("confidence", 0),
                 "recommendations": analysis.get("recommendations", [])

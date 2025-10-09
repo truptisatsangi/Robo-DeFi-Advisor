@@ -21,6 +21,9 @@ class Pool:
     symbol: str
     project: str
     url: Optional[str] = None
+    poolMeta: Optional[str] = None
+    underlyingTokens: Optional[List[str]] = None
+    rewardTokens: Optional[List[str]] = None
     last_updated: Optional[datetime] = None
 
 
@@ -49,6 +52,9 @@ class DiscoveryLogic:
             symbol=pool.symbol,
             project=pool.project,
             url=pool.url,
+            poolMeta=pool.poolMeta,
+            underlyingTokens=pool.underlyingTokens,
+            rewardTokens=pool.rewardTokens,
             last_updated=datetime.utcnow()
         )
 
@@ -78,27 +84,44 @@ class DiscoveryLogic:
     # ------------------------------
     def filter_pools_by_criteria(self, pools: List[Pool], criteria: Dict[str, Any]) -> List[Pool]:
         """Filter pools according to provided criteria."""
+        # Define trusted protocols - only recommend from these
+        TRUSTED_PROTOCOLS = [
+            "uniswap", "uniswap-v2", "uniswap-v3",
+            "compound", "compound-v2", "compound-v3",
+            "aave", "aave-v2", "aave-v3",
+            "venus",
+            "curve", "curve-dex",
+            "pendle",
+            "pancakeswap", "pancake",
+            "balancer", "balancer-v2"
+        ]
+        
         filtered = []
         min_tvl: float = criteria.get("min_tvl", 0.0) or 0
         min_apy: float = criteria.get("min_apy", 0.0) or 0
+        max_apy: float = criteria.get("max_apy")  # Optional max APY for targeted search
         preference = criteria.get("preference", "medium")
 
         for p in pools:
             if p.tvl is None or p.apy is None:
                 continue
+            
+            # FIRST FILTER: Only trusted protocols
+            protocol_lower = p.protocol.lower()
+            is_trusted = any(trusted in protocol_lower for trusted in TRUSTED_PROTOCOLS)
+            if not is_trusted:
+                continue
+            
+            # SECOND FILTER: TVL and APY minimums
             if p.tvl < min_tvl or p.apy < min_apy:
                 continue
+            
+            # THIRD FILTER: Max APY if specified (for targeted APY search)
+            if max_apy is not None and p.apy > max_apy:
+                continue
                 
-            # Additional filtering for safest preference
+            # FOURTH FILTER: Additional filtering for safest preference
             if preference == "safest":
-                # Only include well-known, established protocols for safest
-                safe_protocols = [
-                    "uniswap", "aave", "compound", "makerdao", "lido", 
-                    "curve", "balancer", "yearn", "convex", "frax"
-                ]
-                if not any(safe in p.protocol.lower() for safe in safe_protocols):
-                    continue
-                    
                 # Require higher TVL for safest pools
                 if p.tvl < 10000000:  # $10M minimum for safest
                     continue

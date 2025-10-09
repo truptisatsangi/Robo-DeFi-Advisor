@@ -59,118 +59,55 @@ def create_text_chat(text: str, end_session: bool = False) -> ChatMessage:
         content=content,
     )
 
-# Helper function to generate protocol-specific transaction links
-def _get_transaction_link(pool: Dict[str, Any]) -> str:
-    """Generate direct transaction link for the selected pool."""
-    protocol = pool.get("protocol", "").lower()
-    pool_id = pool.get("id", "")
-    url = pool.get("url", "")
+# Helper function to generate DeFiLlama links only
+def _get_transaction_link(pool: Dict[str, Any]) -> Dict[str, str]:
+    """
+    Generate DeFiLlama link for the selected pool.
     
-    # If pool already has a URL, use it
-    if url:
-        return url
+    Returns a dict with keys:
+    - 'dex_link': DeFiLlama protocol page link
+    - 'fallback_used': Description if link unavailable
+    """
+    import logging
+    logger = logging.getLogger(__name__)
     
-    # Protocol-specific transaction links
-    transaction_links = {
-        "uniswap": {
-            "base_url": "https://app.uniswap.org/explore/pools/ethereum/",
-            "fallback_url": "https://app.uniswap.org/explore/pools"
-        },
-        "uniswap-v2": {
-            "base_url": "https://v2.info.uniswap.org/pair/",
-            "fallback_url": "https://app.uniswap.org/explore/pools"
-        },
-        "uniswap v3": {
-            "base_url": "https://app.uniswap.org/explore/pools/ethereum/",
-            "fallback_url": "https://app.uniswap.org/explore/pools"
-        },
-        "compound": {
-            "base_url": "https://app.compound.finance/",
-            "fallback_url": "https://app.compound.finance/"
-        },
-        "aave": {
-            "base_url": "https://app.aave.com/reserve-overview/?underlyingAsset=",
-            "fallback_url": "https://app.aave.com/"
-        },
-        "curve": {
-            "base_url": "https://curve.fi/#/ethereum/pools/",
-            "fallback_url": "https://curve.fi/"
-        },
-        "balancer": {
-            "base_url": "https://app.balancer.fi/#/ethereum/pool/",
-            "fallback_url": "https://app.balancer.fi/"
-        },
-        "pendle": {
-            "base_url": "https://app.pendle.finance/trade/pools/",
-            "fallback_url": "https://app.pendle.finance/"
-        },
-        "lido": {
-            "base_url": "https://stake.lido.fi/",
-            "fallback_url": "https://stake.lido.fi/"
-        },
-        "maple": {
-            "base_url": "https://app.maple.finance/lend/pool/",
-            "fallback_url": "https://app.maple.finance/"
-        },
-        "sparklend": {
-            "base_url": "https://app.spark.fi/reserve-overview/?underlyingAsset=",
-            "fallback_url": "https://app.spark.fi/"
-        },
-        "justlend": {
-            "base_url": "https://justlend.org/#/market/",
-            "fallback_url": "https://justlend.org/"
-        },
-        "raydium": {
-            "base_url": "https://raydium.io/liquidity/pool/",
-            "fallback_url": "https://raydium.io/swap/"
-        },
-        "hyperion": {
-            "base_url": "https://app.hyperion.finance/pool/",
-            "fallback_url": "https://app.hyperion.finance/"
-        },
-        "spectra": {
-            "base_url": "https://app.spectra.finance/pool/",
-            "fallback_url": "https://app.spectra.finance/"
-        },
-        "spectra-v2": {
-            "base_url": "https://app.spectra.finance/pool/",
-            "fallback_url": "https://app.spectra.finance/"
-        }
+    result = {
+        'dex_link': None,
+        'fallback_used': None
     }
     
-    # Get the appropriate link for the protocol
-    if protocol in transaction_links:
-        link_info = transaction_links[protocol]
-        
-        # Try to construct specific pool link with pool ID
-        if pool_id:
-            return f"{link_info['base_url']}{pool_id}"
-        else:
-            return link_info["fallback_url"]
+    # Extract protocol (handle None values)
+    protocol = (pool.get("protocol") or "").lower().strip()
     
-    # Fallback to DeFiLlama for unknown protocols
+    # Always use DeFiLlama protocol page
     if protocol:
-        return f"https://defillama.com/protocol/{protocol.replace(' ', '-')}"
+        result['dex_link'] = f"https://defillama.com/protocol/{protocol.replace(' ', '-')}"
+        logger.debug(f"Using DeFiLlama link for {protocol}")
+    else:
+        result['fallback_used'] = "No protocol information available"
+        logger.warning(f"No protocol found for pool")
     
-    return None
+    return result
 
 # Helper function to format pool information
 def format_pool_info(pool: Dict[str, Any], is_alternative: bool = False) -> str:
     """Format pool information with all details and links."""
+    import re
+    
     prefix = "🔄 **Alternative Pool:**" if is_alternative else "📊 **Recommended Pool:**"
     
-    # Pool ID (full address)
-    pool_id = pool.get('id', 'Unknown')
+    # Pool ID (this is DeFiLlama's UUID, not a contract address)
+    pool_id = pool.get('id') or 'Unknown'
     
-    # Pool Details
-    apy = pool.get('apy', 0)
-    tvl = pool.get('tvl', 0)
-    protocol = pool.get('protocol', 'Unknown')
-    symbol = pool.get('symbol', 'Unknown')
-    chain = pool.get('chain', 'ethereum')
+    # Pool Details (handle None values)
+    apy = pool.get('apy') or 0
+    tvl = pool.get('tvl') or 0
+    protocol = pool.get('protocol') or 'Unknown'
+    symbol = pool.get('symbol') or 'Unknown'
+    chain = pool.get('chain') or 'ethereum'
     
-    # Get proper transaction link
-    pool_link = _get_transaction_link(pool)
+    # Get proper transaction links (returns dict with dex_link and explorer_link)
+    links = _get_transaction_link(pool)
     
     # Risk Assessment
     risk_data = pool.get('riskData', {})
@@ -191,13 +128,18 @@ def format_pool_info(pool: Dict[str, Any], is_alternative: bool = False) -> str:
     
     # Build the formatted string
     formatted = f"{prefix}\n\n"
-    formatted += f"📝 **Pool ID:** `{pool_id}`\n"
     formatted += f"💱 **Symbol:** {symbol}\n"
     formatted += f"🏦 **Protocol:** {protocol}\n"
     formatted += f"⛓️ **Chain:** {chain.capitalize()}\n"
     formatted += f"📈 **APY:** {apy:.2f}%\n"
     formatted += f"💧 **Total Value Locked:** ${tvl:,.0f}\n"
-    formatted += f"⚠️ **Risk Assessment:** {risk_emoji} {risk_level} (Score: {risk_score}/100)\n\n"
+    formatted += f"⚠️ **Risk Assessment:** {risk_emoji} {risk_level} (Score: {risk_score}/100)\n"
+    
+    # Add detailed risk reasoning
+    risk_reasoning = risk_data.get('riskReasoning')
+    if risk_reasoning:
+        formatted += f"\n💭 **Risk Analysis:**\n{risk_reasoning}\n"
+    formatted += "\n"
     
     # Security metrics based on available data
     formatted += "🔒 **Security Metrics:**\n"
@@ -228,13 +170,16 @@ def format_pool_info(pool: Dict[str, Any], is_alternative: bool = False) -> str:
     else:
         formatted += f"• Risk Level: 🔴 High Risk\n"
     
-    # Add link
-    if pool_link:
-        formatted += f"\n🔗 **Pool Link:** {pool_link}\n"
-        formatted += f"📊 **View on Etherscan:** https://etherscan.io/address/{pool_id}\n"
+    # Display links section
+    formatted += "\n"
+    
+    # Show DEX/Protocol link if available
+    if links.get('dex_link'):
+        formatted += f"🔗 **Pool Link:** {links['dex_link']}\n"
     else:
-        formatted += f"\n🔗 **Pool Link:** Not available\n"
-        formatted += f"📊 **View on Etherscan:** https://etherscan.io/address/{pool_id}\n"
+        formatted += f"🔗 **Pool Link:** Not available\n"
+        if links.get('fallback_used'):
+            formatted += f"ℹ️ {links['fallback_used']}\n"
     
     # Add recommendations
     recommendations = risk_data.get('recommendations', [])
@@ -346,5 +291,49 @@ async def handle_decision_response(ctx: Context, sender: str, msg: DecisionRespo
 agent.include(chat_proto, publish_manifest=True)
 
 
+# Unit tests for link generation
+def test_link_generation():
+    """Test link generation for common pool scenarios."""
+    print("\n🧪 Running link generation tests...\n")
+    
+    # Test 1: Pool with protocol returns DeFiLlama link
+    test_pool_1 = {
+        'id': '8dca6b2d-0c91-414a-a582-6e5dc1de057a',
+        'protocol': 'spectra-v2',
+        'chain': 'ethereum',
+    }
+    links_1 = _get_transaction_link(test_pool_1)
+    expected_link_1 = "https://defillama.com/protocol/spectra-v2"
+    assert links_1['dex_link'] == expected_link_1, f"Test 1 Failed: Expected {expected_link_1}, got {links_1['dex_link']}"
+    print("✅ Test 1 PASSED: Pool returns DeFiLlama link")
+    
+    # Test 2: Pool with different protocol
+    test_pool_2 = {
+        'id': 'test-pool-123',
+        'protocol': 'uniswap-v3',
+        'chain': 'ethereum',
+    }
+    links_2 = _get_transaction_link(test_pool_2)
+    expected_link_2 = "https://defillama.com/protocol/uniswap-v3"
+    assert links_2['dex_link'] == expected_link_2, f"Test 2 Failed: Expected {expected_link_2}, got {links_2['dex_link']}"
+    print("✅ Test 2 PASSED: Different protocol returns correct DeFiLlama link")
+    
+    # Test 3: Pool with Aptos chain
+    test_pool_3 = {
+        'id': '07e6913e-48b4-479a-9fb3-8141e91a2a61',
+        'protocol': 'hyperion',
+        'chain': 'aptos',
+    }
+    links_3 = _get_transaction_link(test_pool_3)
+    expected_link_3 = "https://defillama.com/protocol/hyperion"
+    assert links_3['dex_link'] == expected_link_3, f"Test 3 Failed: Expected {expected_link_3}, got {links_3['dex_link']}"
+    print("✅ Test 3 PASSED: Aptos pool returns DeFiLlama link")
+    
+    print("\n✅ All link generation tests passed!\n")
+
 if __name__ == "__main__": 
+    # Run tests first
+    test_link_generation()
+    
+    # Then run agent
     agent.run()

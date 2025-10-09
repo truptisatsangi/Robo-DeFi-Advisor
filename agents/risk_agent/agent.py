@@ -120,10 +120,21 @@ async def analyze_pool(pool: Dict[str, Any]) -> Dict[str, Any]:
         "poolMetrics": metrics
     })
 
+    # Generate detailed risk reasoning
+    risk_reasoning = generate_risk_reasoning(risk_score_val, {
+        "contractVerification": cv.get("result"),
+        "auditStatus": audit.get("result"),
+        "holderConcentration": conc.get("result"),
+        "liquidityScore": liq.get("result"),
+        "exploitHistory": exploit.get("result"),
+        "poolMetrics": metrics
+    })
+    
     analysis = {
         "poolId": pool_id,
         "riskScore": risk_score_val,
         "riskLevel": get_risk_level(risk_score_val),
+        "riskReasoning": risk_reasoning,  # Detailed explanation
         "factors": {
             "contractVerified": cv.get("result"),
             "auditLink": audit.get("result"),
@@ -195,29 +206,57 @@ async def assert_metta(fact: str) -> Dict[str, Any]:
 # Scoring & recommendations
 # ------------------------------
 def calculate_risk_score(factors: Dict[str, Any]) -> float:
+    """Calculate risk score based on available data (0-100, higher is safer)."""
     score = 0.0
-
-    if factors.get("contractVerification"):
+    pool_metrics = factors.get("poolMetrics", {})
+    
+    # Get pool data
+    tvl = pool_metrics.get("tvl", 0)
+    apy = pool_metrics.get("apy", 0)
+    protocol = pool_metrics.get("protocol", "").lower()
+    
+    # 1. TVL Score (0-30 points) - Most important for actual safety
+    if tvl > 100_000_000:  # > $100M
+        score += 30.0
+    elif tvl > 50_000_000:  # > $50M
         score += 25.0
-
-    if factors.get("auditStatus"):
+    elif tvl > 10_000_000:  # > $10M
         score += 20.0
-
-    if factors.get("holderConcentration") is not None:
-        concentration = factors["holderConcentration"]
-        concentration_score = max(0, 20.0 - (concentration * 20.0))
-        score += concentration_score
-
-    if factors.get("liquidityScore") is not None:
-        score += factors["liquidityScore"] * 15.0
-
-    if factors.get("exploitHistory") is None:
+    elif tvl > 5_000_000:   # > $5M
+        score += 15.0
+    elif tvl > 1_000_000:   # > $1M
         score += 10.0
+    elif tvl > 100_000:     # > $100K
+        score += 5.0
+    # else: 0 points for very low TVL
 
-    if factors.get("poolMetrics", {}).get("tvlUSD"):
-        tvl = factors["poolMetrics"]["tvlUSD"]
-        tvl_score = min(10.0, (tvl ** 0.1) / 10.0)
-        score += tvl_score
+    # 2. Protocol Reputation Score (0-35 points)
+    trusted_tier1 = ["uniswap", "aave", "compound", "curve"]  # Most trusted
+    trusted_tier2 = ["balancer", "pendle", "venus", "pancakeswap"]  # Established
+    
+    if any(t1 in protocol for t1 in trusted_tier1):
+        score += 35.0  # Maximum trust
+    elif any(t2 in protocol for t2 in trusted_tier2):
+        score += 25.0  # Good trust
+    else:
+        score += 10.0  # Unknown/new protocol
+
+    # 3. APY Sustainability Score (0-20 points) - Lower APY often means lower risk
+    if apy < 5:
+        score += 20.0  # Very conservative yield
+    elif apy < 10:
+        score += 15.0  # Moderate yield
+    elif apy < 20:
+        score += 10.0  # Above-average yield
+    elif apy < 50:
+        score += 5.0   # High yield - some risk
+    # else: 0 points for extremely high APY
+
+    # 4. Exploit History (0-15 points)
+    if factors.get("exploitHistory") is None:
+        score += 15.0  # No known exploits
+    else:
+        score += 0.0   # Has exploit history
 
     return round(score, 2)
 
@@ -234,6 +273,64 @@ def get_risk_level(score: float) -> str:
 
 def calculate_confidence(confidences: List[float]) -> float:
     return sum(confidences) / len(confidences) if confidences else 0.0
+
+def generate_risk_reasoning(risk_score: float, factors: Dict[str, Any]) -> str:
+    """Generate detailed explanation for the risk score."""
+    pool_metrics = factors.get("poolMetrics", {})
+    tvl = pool_metrics.get("tvl", 0)
+    apy = pool_metrics.get("apy", 0)
+    protocol = pool_metrics.get("protocol", "").lower()
+    
+    reasoning_parts = []
+    
+    # Overall assessment
+    if risk_score >= 80:
+        reasoning_parts.append("This pool has a VERY LOW risk profile.")
+    elif risk_score >= 60:
+        reasoning_parts.append("This pool has a LOW risk profile.")
+    elif risk_score >= 40:
+        reasoning_parts.append("This pool has a MEDIUM risk profile.")
+    elif risk_score >= 20:
+        reasoning_parts.append("This pool has a HIGH risk profile.")
+    else:
+        reasoning_parts.append("This pool has a VERY HIGH risk profile.")
+    
+    # TVL contribution to score
+    if tvl > 100_000_000:
+        reasoning_parts.append(f"✓ Excellent liquidity with ${tvl:,.0f} TVL provides strong stability and low slippage risk.")
+    elif tvl > 10_000_000:
+        reasoning_parts.append(f"✓ Good liquidity with ${tvl:,.0f} TVL provides reasonable stability.")
+    elif tvl > 1_000_000:
+        reasoning_parts.append(f"⚠ Moderate liquidity at ${tvl:,.0f} TVL - some slippage risk on large trades.")
+    else:
+        reasoning_parts.append(f"⚠ Low liquidity at ${tvl:,.0f} TVL increases risk of high slippage and price impact.")
+    
+    # Protocol reputation contribution
+    established_protocols = ["uniswap", "aave", "compound", "curve", "balancer", "pendle", "venus", "pancake"]
+    if any(est in protocol for est in established_protocols):
+        reasoning_parts.append(f"✓ {protocol.title()} is an established protocol with strong track record and audits.")
+    else:
+        reasoning_parts.append(f"⚠ {protocol.title()} is less established - additional due diligence recommended.")
+    
+    # APY assessment
+    if apy > 100:
+        reasoning_parts.append(f"⚠ Extremely high APY ({apy:.1f}%) suggests high risk or temporary incentives - verify sustainability.")
+    elif apy > 50:
+        reasoning_parts.append(f"⚠ Very high APY ({apy:.1f}%) - check for impermanent loss risks and reward token volatility.")
+    elif apy > 20:
+        reasoning_parts.append(f"✓ High APY ({apy:.1f}%) offers good returns with acceptable risk for diversified portfolio.")
+    elif apy > 5:
+        reasoning_parts.append(f"✓ Moderate APY ({apy:.1f}%) suggests stable, sustainable returns.")
+    else:
+        reasoning_parts.append(f"✓ Low APY ({apy:.1f}%) indicates very conservative, stable yield.")
+    
+    # Exploit history
+    if factors.get("exploitHistory") is None:
+        reasoning_parts.append("✓ No known exploit history.")
+    else:
+        reasoning_parts.append("⚠ Past exploit detected - extra caution advised.")
+    
+    return " ".join(reasoning_parts)
 
 def generate_recommendations(risk_score: float, factors: Dict[str, Any]) -> List[str]:
     recommendations: List[str] = []
