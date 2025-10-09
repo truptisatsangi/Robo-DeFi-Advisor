@@ -19,6 +19,9 @@ class YieldProtocol:
     apyBase: Optional[float]
     symbol: str
     url: Optional[str] = None
+    poolMeta: Optional[str] = None
+    underlyingTokens: Optional[List[str]] = None
+    rewardTokens: Optional[List[str]] = None
 
 
 @dataclass
@@ -61,6 +64,9 @@ class DeFiLlamaClient:
                         apyBase=p.get("apyBase"),
                         symbol=p.get("symbol", ""),
                         url=p.get("url"),
+                        poolMeta=p.get("poolMeta"),
+                        underlyingTokens=p.get("underlyingTokens", []),
+                        rewardTokens=p.get("rewardTokens", [])
                     )
                 )
             return pools

@@ -37,7 +37,7 @@ class DecisionAgent:
         try:
             print(f"🎯 Decision Agent: Selecting optimal pool with criteria: {user_criteria}")
 
-            print(f"🎯 Decision Agent: Starting with {len(pools)} pools from discovery")
+            print(f"🎯 Decision Agent: Starting with {len(pools)} pools from risk agent")
             
             # Step 1: Filter pools based on criteria
             filtered_pools = self.filter_pools_by_criteria(pools, user_criteria)
@@ -62,18 +62,35 @@ class DecisionAgent:
             # Step 5: Generate reasoning trace
             reasoning_trace = self.generate_reasoning_trace(user_criteria, scored_pools, optimal_pool)
             print(f"🔍 Decision Agent: Generated reasoning trace: {reasoning_trace}")   
-            print({
-                "success": True,
-                "optimalPool": optimal_pool,
-                "allCandidates": scored_pools,
-                "reasoningTrace": reasoning_trace,
-                "criteria": user_criteria,
-                "timestamp": datetime.now().isoformat(),
-            })
+
+            # Get alternatives based on user's target APY if specified
+            target_apy = user_criteria.get("target_apy")
+            
+            if target_apy and len(scored_pools) >= 3:
+                # User specified target APY - provide targeted recommendation + safest + highest yield alternatives
+                alternatives = []
+                
+                # Find safest pool (highest risk score)
+                safest_pool = max(scored_pools[1:], key=lambda x: x.get("riskScore", 0))
+                alternatives.append(safest_pool)
+                
+                # Find highest yield pool (highest APY) that's not the safest
+                highest_yield = max(
+                    [p for p in scored_pools[1:] if p.get('id') != safest_pool.get('id')],
+                    key=lambda x: x.get("apy", 0),
+                    default=None
+                )
+                if highest_yield:
+                    alternatives.append(highest_yield)
+            else:
+                # No target APY - show next best options
+                top_3_pools = scored_pools[:3] if len(scored_pools) >= 3 else scored_pools
+                alternatives = top_3_pools[1:] if len(top_3_pools) > 1 else []
 
             return {
                 "success": True,
                 "optimalPool": optimal_pool,
+                "alternatives": alternatives,
                 "allCandidates": scored_pools,
                 "reasoningTrace": reasoning_trace,
                 "criteria": user_criteria,
