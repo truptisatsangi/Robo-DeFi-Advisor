@@ -58,6 +58,35 @@ async def risk_analysis(
         # analyze in parallel
         analyses = await asyncio.gather(*[analyze_pool(p) for p in normalized])
 
+        # Enforce policy risk constraints: drop pools that fail risk.min_score or risk.max_level
+        user_intent = msg.user_intent or {}
+        risk_cfg = user_intent.get("risk") or {}
+        if isinstance(risk_cfg, str):
+            risk_cfg = {"max_level": risk_cfg, "min_score": None}
+        min_score = risk_cfg.get("min_score")
+        max_level = risk_cfg.get("max_level")
+        RISK_LEVEL_ORDER = ["very_low", "low", "medium", "high", "very_high"]
+
+        def risk_level_rank(level: str) -> int:
+            try:
+                return RISK_LEVEL_ORDER.index((level or "").lower().replace(" ", "_"))
+            except ValueError:
+                return 2  # medium
+
+        filtered_analyses = []
+        for a in analyses:
+            if min_score is not None and (a.get("riskScore") or 0) < min_score:
+                ctx.logger.info("Dropping pool %s: riskScore %s < policy min_score %s", a.get("poolId"), a.get("riskScore"), min_score)
+                continue
+            if max_level is not None:
+                pool_level = (a.get("riskLevel") or "medium").lower().replace(" ", "_")
+                max_rank = risk_level_rank(max_level)
+                if risk_level_rank(pool_level) > max_rank:
+                    ctx.logger.info("Dropping pool %s: riskLevel %s worse than policy max_level %s", a.get("poolId"), a.get("riskLevel"), max_level)
+                    continue
+            filtered_analyses.append(a)
+        analyses = filtered_analyses
+
         response = RiskResponse(
             type= "RiskResponse",
             status="success",

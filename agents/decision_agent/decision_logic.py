@@ -1,12 +1,19 @@
 # decision_logic.py
 """
 DecisionAgent logic for optimal pool selection with transparent reasoning.
-This module contains the full decision-making class used by uAgents wrapper.
+Uses a deterministic, explainable ranking formula so recommendations are reproducible.
 """
 
 from typing import Dict, List, Any
 from dataclasses import dataclass
 from datetime import datetime
+
+# Deterministic ranking formula (documented for DAO governance).
+# score = WEIGHT_APY * normalized_apy + WEIGHT_RISK * normalized_risk_score + WEIGHT_TVL * normalized_tvl
+# Each variable is normalized to [0, 1] over the candidate set. Same policy + same data => same ranking.
+WEIGHT_APY = 0.5
+WEIGHT_RISK = 0.3
+WEIGHT_TVL = 0.2
 
 
 @dataclass
@@ -182,83 +189,58 @@ class DecisionAgent:
         return filtered_pools
 
     # -------------------------------
-    # Scoring
+    # Scoring (deterministic ranking formula)
     # -------------------------------
+    def _normalize_0_1(self, values: List[float], higher_better: bool = True) -> List[float]:
+        """Map values to [0, 1] with min-max. Guard for constant range (return 0.5)."""
+        if not values:
+            return []
+        lo, hi = min(values), max(values)
+        if hi <= lo:
+            return [0.5] * len(values)
+        out = [(v - lo) / (hi - lo) for v in values]
+        if not higher_better:
+            out = [1.0 - x for x in out]
+        return out
+
     def score_pools(self, pools: List[Dict[str, Any]], criteria: Dict[str, Any]) -> List[Dict[str, Any]]:
-        """Score and rank pools based on criteria."""
+        """
+        Score and rank pools using the deterministic formula:
+          score = WEIGHT_APY * normalized_apy + WEIGHT_RISK * normalized_risk_score + WEIGHT_TVL * normalized_tvl
+        Normalize each variable to [0, 1] over the candidate set. Reproducible for same policy + data.
+        """
+        if not pools:
+            return []
+
+        apys = [p.get("apy", 0) or 0 for p in pools]
+        risk_scores = [
+            (p.get("riskData") or {}).get("riskScore", 50) for p in pools
+        ]  # 0-100, higher = safer
+        tvls = [max((p.get("tvl") or 0), 0) for p in pools]
+
+        norm_apy = self._normalize_0_1(apys, higher_better=True)
+        norm_risk = self._normalize_0_1(risk_scores, higher_better=True)
+        norm_tvl = self._normalize_0_1(tvls, higher_better=True)
+
         scored_pools = []
-
-        for pool in pools:
-            score_factors = {}
-            total_score = 0.0
-
-            # APY Score (0–40 points)
-            apy = pool.get("apy", 0)
-            if apy <= 0:
-                apy_score = 0  # No points for 0 or negative APY
-            else:
-                apy_score = min(40.0, apy * 2.0)
-            total_score += apy_score
-            score_factors["apyScore"] = apy_score
-
-            # Risk Score (0–30 points)
-            # Note: Risk agent uses inverted scale (higher score = lower risk)
-            # We need to convert to risk level for decision making
-            risk_score_val = pool.get("riskData", {}).get("riskScore", 50)
-            risk_level = pool.get("riskData", {}).get("riskLevel", "medium")
-            
-            # Convert risk level to numeric risk score (0-100, where 0 = very low risk, 100 = very high risk)
-            risk_numeric = {
-                "very_low": 10,
-                "low": 30, 
-                "medium": 50,
-                "high": 70,
-                "very_high": 90
-            }.get(risk_level, 50)
-            
-            # Calculate risk score for decision (lower risk = higher score)
-            risk_score = max(0.0, 30.0 - (risk_numeric * 0.3))
-            total_score += risk_score
-            score_factors["riskScore"] = risk_score
-
-            # Liquidity Score (0–20 points)
-            tvl = pool.get("tvl", 0)
-            if tvl <= 0:
-                liquidity_score = 0  # No points for 0 or negative TVL
-            else:
-                liquidity_score = min(20.0, (tvl ** 0.1) / 2.0)
-            total_score += liquidity_score
-            score_factors["liquidityScore"] = liquidity_score
-
-            # Protocol Bonus (0–10 points)
-            protocol = pool.get("protocol", "")
-            protocol_bonus = 10.0 if protocol == "Uniswap V3" else 5.0
-            total_score += protocol_bonus
-            score_factors["protocolBonus"] = protocol_bonus
-
-            # Safety Preference Adjustment
-            safety_preference = criteria.get("preference", "medium")
-            if safety_preference == "safest":
-                # For safest preference, heavily weight low risk pools
-                # Use risk level to determine bonuses/penalties
-                if risk_level == "very_low":
-                    total_score += 50.0  # Big bonus for very low risk
-                elif risk_level == "low":
-                    total_score += 25.0  # Moderate bonus for low risk
-                elif risk_level == "very_high":
-                    total_score -= 40.0  # Heavy penalty for very high risk
-                elif risk_level == "high":
-                    total_score -= 20.0  # Moderate penalty for high risk
-            elif safety_preference == "highest_yield":
-                total_score = total_score * 1.2 + (20.0 if apy > 15 else 0.0)
-
-            pool["totalScore"] = round(total_score, 2)
-            pool["scoreFactors"] = score_factors
+        for i, pool in enumerate(pools):
+            total_score = (
+                WEIGHT_APY * norm_apy[i]
+                + WEIGHT_RISK * norm_risk[i]
+                + WEIGHT_TVL * norm_tvl[i]
+            )
+            pool["totalScore"] = round(total_score, 4)
+            pool["scoreFactors"] = {
+                "normalized_apy": norm_apy[i],
+                "normalized_risk_score": norm_risk[i],
+                "normalized_tvl": norm_tvl[i],
+                "weights": {"apy": WEIGHT_APY, "risk": WEIGHT_RISK, "tvl": WEIGHT_TVL},
+            }
             scored_pools.append(pool)
 
         scored_pools.sort(key=lambda x: x["totalScore"], reverse=True)
-        for i, pool in enumerate(scored_pools):
-            pool["ranking"] = i + 1
+        for rank, pool in enumerate(scored_pools, 1):
+            pool["ranking"] = rank
 
         return scored_pools
 
@@ -299,7 +281,7 @@ class DecisionAgent:
                 "scoringFactors": list(optimal_pool.get("scoreFactors", {}).keys()),
                 "topScores": [{"id": p.get("id", "unknown"), "score": p.get("totalScore", 0)} for p in all_pools[:3]],
             },
-            "reasoning": "Scored pools using APY (40%), Risk (30%), Liquidity (20%), and Protocol (10%) weights",
+            "reasoning": f"Scored pools using deterministic formula: score = {WEIGHT_APY}*norm_apy + {WEIGHT_RISK}*norm_risk + {WEIGHT_TVL}*norm_tvl (each normalized to [0,1])",
             "timestamp": datetime.now().isoformat(),
         })
 
