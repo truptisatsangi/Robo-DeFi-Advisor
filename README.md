@@ -1,24 +1,30 @@
-# 🎯 Robo DeFi Advisor — ASI-Powered Autonomous Investment Assistant
+# 🎯 Robo DeFi Advisor — DAO Treasury Management Module (MVP-First)
 
 [![ASI Alliance](https://img.shields.io/badge/ASI%20Alliance-Powered-blue)](https://asi.foundation/)
 [![uAgents](https://img.shields.io/badge/uAgents-Framework-green)](https://github.com/fetchai/uagents)
 [![AgentVerse](https://img.shields.io/badge/AgentVerse-Platform-orange)](https://agentverse.ai/)
 [![Python](https://img.shields.io/badge/Python-3.13+-yellow)](https://python.org/)
 
-> **Make Web3 investing trivial**: Tell the system what you want in plain English and the ASI agent network finds, evaluates, and recommends the best on-chain investment for you.
+> **Governance-aligned treasury advisor for DAOs**: convert an approved treasury mandate into deterministic DeFi recommendations and governance-ready proposal drafts.  
+> **MVP is proposal-only**: no autonomous execution, no custody, no wallet fund movement.
 
 ## 📋 Table of Contents
 
 - [Project Goal](#-project-goal)
+- [Current Implementation Status](#-current-implementation-status)
 - [High-level Use Case](#-high-level-use-case)
 - [Architecture & Components](#-architecture--components)
 - [End-to-end Flow](#-end-to-end-flow)
+- [Phase 1 (Implemented)](#-phase-1-implemented-mvp)
+- [Phase 2 (Planned)](#-phase-2-planned-post-mvp)
 - [Quick Start](#-quick-start)
 - [Agent Configuration](#-agent-configuration)
 - [Beautiful Output Format](#-beautiful-output-format)
 - [Protocols & Tech Stack](#-protocols--tech-stack)
 - [Interaction Examples](#-interaction-examples)
-- [Security, Privacy & Trust](#-security-privacy--trust)
+- [Decision Formula and Rationale](#-decision-formula-and-rationale)
+- [Security, Risk & Trust Model](#-security-risk--trust-model)
+- [Why Large Protocols/DAOs Should Use This](#-why-large-protocolsdaos-should-use-this)
 - [Future Scope](#-future-scope)
 - [Deployment Guide](#-deployment-guide)
 - [Troubleshooting](#-troubleshooting)
@@ -26,20 +32,34 @@
 
 ## 🎯 Project Goal
 
-**Make investment in Web3 with negligible effort.**
+**Help DAOs deploy idle stablecoin treasury capital safely and transparently.**
 
-A user types something like:
-> "I want to invest $1000 and get at least 8% APY."
+Robo DeFi Advisor (RDA) converts a DAO-approved policy into:
 
-The Robo DeFi Advisor (RDA) will:
+✅ **Policy-constrained opportunity discovery**  
+✅ **Deterministic risk filtering and ranking**  
+✅ **Allocation suggestions + expected portfolio APY**  
+✅ **Governance proposal draft (Snapshot/Tally-compatible markdown)**  
+✅ **Append-only audit records linked to mandate and policy snapshot**
 
-✅ **Parse the intent** from natural language  
-✅ **Discover candidate pools** across DEX/aggregator datasets  
-✅ **Evaluate risk** and verify constraints  
-✅ **Return explainable options** (pool addresses, yield estimate, risk metrics)  
-✅ **Provide beautiful, user-friendly responses** in ASI Chat  
+**Primary KPI**: reduce governance and research overhead while preserving policy control and auditability.
 
-**Primary KPI**: Increase user adoption by reducing complexity — users don't need to learn pools, fees, or risk metrics. They only describe intent.
+## 📌 Current Implementation Status
+
+The codebase currently includes a full **Phase 1 MVP treasury recommendation pipeline**:
+
+- `core/treasury_policy.py`: structured `TreasuryPolicy` schema with validation (risk constraints, APY bounds, protocol whitelist validation).
+- `core/protocol_registry.py`: canonical protocol metadata and validation helpers.
+- `core/mandate.py`: mandate load/save/expiry checks; blocks recommendations on expired mandate.
+- `agents/discovery_agent/discovery_logic.py`: policy-driven pool filtering, registry-aware protocol and chain checks.
+- `agents/risk_agent/agent.py` + treasury-level risk enforcement: policy `risk.min_score` and `risk.max_level` hard filters.
+- `agents/decision_agent/decision_logic.py`: deterministic scoring formula and ranking.
+- `core/explanation.py`: rule-based per-pool explanation for governance transparency.
+- `core/allocation.py`: constrained multi-pool allocation split.
+- `core/proposal_templates.py`: governance-ready markdown draft generation.
+- `core/audit.py`: append-only NDJSON run logs.
+- `agents/treasury_agent/run.py`: orchestration flow (mandate -> discovery -> risk -> decision -> explanation -> proposal -> audit).
+- `tests/`: unit coverage for policy, mandate, risk filtering, decision ranking, and discovery policy filters.
 
 ## 🚀 High-level Use Case
 
@@ -73,16 +93,20 @@ ASI:One → User (explainable response)
 
 ## 🔄 End-to-end Flow
 
-### Example User Request:
-> "Invest $1,000 in a way to get at least 8% APY, prefer low risk, USDC/USDT only."
+### Example Treasury Request:
+> "Generate recommendation under mandate `test-mandate-001` for $100,000 USDC."
 
 ### System Processing:
 
-1. **ASI:One** → Parse intent → Produce structured intent object
-2. **Discovery Agent** → Query DeFiLlama/DexScreener → Return pools matching criteria
-3. **Risk Agent** → Use MeTTa knowledge-graph + metrics → Score/filter pools
-4. **Decision Agent** → Reconcile constraints + risk scores + APY → Choose optimal pool
-5. **ASI Chat** → Send beautiful explanation + pool address + rationale
+1. **Treasury Agent** loads mandate by `mandate_id`
+2. Mandate policy is validated (`TreasuryPolicy` + protocol registry)
+3. **Discovery Agent** fetches pools and applies policy constraints
+4. **Risk filtering** enforces `risk.min_score` and `risk.max_level`
+5. **Decision Agent** computes deterministic ranking score
+6. **Explanation layer** adds "why selected" to each recommendation
+7. **Allocation engine** computes split + expected portfolio APY
+8. **Proposal template** generates governance draft markdown
+9. **Audit logger** appends immutable run record (MVP file append)
 
 ## ⚡ Quick Start
 
@@ -130,6 +154,40 @@ ASI:One → User (explainable response)
    # Terminal 4 - Decision Agent
    python agents/decision_agent/agent.py
    ```
+
+6. **Run treasury MVP tests**
+   ```bash
+   python3 -m pytest tests/
+   ```
+
+## ✅ Phase 1 (Implemented MVP)
+
+Phase 1 is implemented as a **recommendation and proposal generation system**:
+
+1. Policy schema and protocol validation (`core/treasury_policy.py`, `core/protocol_registry.py`)
+2. Mandate lifecycle checks (`core/mandate.py`)
+3. Policy-constrained discovery (`agents/discovery_agent/discovery_logic.py`)
+4. Risk constraints enforcement (`agents/risk_agent/agent.py`, treasury orchestrator)
+5. Deterministic decision ranking (`agents/decision_agent/decision_logic.py`)
+6. Explanation layer (`core/explanation.py`)
+7. Proposal generation (`core/proposal_templates.py`)
+8. Append-only audit logs (`core/audit.py`)
+9. Treasury orchestration entrypoint (`agents/treasury_agent/run.py`)
+10. Unit tests in `tests/`
+
+**Critical MVP boundary**: No autonomous execution, no wallet integration, no custody, no fund movement.
+
+## 🚧 Phase 2 (Planned Post-MVP)
+
+Planned but intentionally **not implemented** in MVP:
+
+- Execution within mandate (multisig/timelock controlled)
+- Circuit breaker and emergency withdrawal workflow
+- Cryptographically hash-chained audit trail + optional on-chain anchor
+- Continuous monitoring and rebalancing triggers
+- Enterprise policy ops, approvals, and reviewer gates
+
+This split is deliberate: institutional trust requires proving policy discipline before enabling execution.
 
 ## 🔧 Agent Configuration
 
@@ -236,32 +294,70 @@ Liquidity: $1.2M
 *Powered by DeFi Risk Advisor*
 ```
 
-## 🔐 Security, Privacy & Trust
+## 🧮 Decision Formula and Rationale
 
-- **🔑 DID-based identities** (Fetch Network): Agents sign their messages for authenticity verification
-- **🔒 Encrypted messaging**: Agent handoffs carry sensitive details encrypted end-to-end
-- **📊 Provenance**: Every metric is attached to a source (e.g., DeFiLlama + timestamp)
-- **👀 Read-only analysis**: Default system only recommends, doesn't execute without explicit approval
-- **✍️ User consent**: Any transaction requires explicit wallet signature (never holds private keys)
+RDA uses a deterministic composite score in `agents/decision_agent/decision_logic.py`:
+
+```text
+score = 0.5 * normalized_apy
+      + 0.3 * normalized_risk_score
+      + 0.2 * normalized_tvl
+```
+
+Where:
+
+- `normalized_apy`: APY normalized to `[0,1]` across candidate pools (higher is better)
+- `normalized_risk_score`: risk score normalized to `[0,1]` (higher = safer)
+- `normalized_tvl`: TVL normalized to `[0,1]` (higher liquidity is better)
+
+Why this formula:
+
+- **Governance reproducibility**: same mandate + same input data always returns the same ranking.
+- **Balanced treasury objective**: DAOs want yield, but not at the cost of unsafe or illiquid pools.
+- **Risk-aware by design**: risk has meaningful weight (`0.3`) and hard policy filters are applied before ranking.
+- **Liquidity protection**: TVL term (`0.2`) penalizes thin pools that can create slippage/liquidity risk.
+- **Explainability for review committees**: each score decomposes into explicit factors that are easy to audit.
+
+Why these weights specifically (`0.5 / 0.3 / 0.2`):
+
+- **0.5 APY**: treasury mandate still targets productive yield on idle capital.
+- **0.3 Risk**: safety is prioritized second, preventing "highest APY wins" behavior.
+- **0.2 TVL**: liquidity is a practical execution and risk-quality proxy.
+
+These are intentionally conservative MVP defaults. A DAO can change weights later through governance, but the model remains deterministic and transparent.
+
+## 🔐 Security, Risk & Trust Model
+
+AI in treasury workflows introduces real risk: bad recommendations, hidden model variance, policy drift, and unauthorized execution paths.  
+RDA mitigates these in the current implementation with strict controls:
+
+- **Mandate-gated operation**: every run requires a DAO-approved `mandate_id`; expired or missing mandates are blocked.
+- **Policy as single source of truth**: APY, risk, protocol, chain, TVL, and allocation caps are hard constraints.
+- **Deterministic ranking (non-LLM)**: recommendation order is reproducible from explicit formula and data inputs.
+- **Proposal-only MVP**: system cannot autonomously move funds; it only returns recommendations + markdown proposal drafts.
+- **Registry-controlled protocol surface**: protocol allowlist validated through `core/protocol_registry.py` to prevent arbitrary unknown integrations.
+- **Audit traceability**: each run logs `run_id`, `mandate_id`, `policy_snapshot`, output, and timestamp.
+- **Explainability**: each recommended pool includes explicit rule-based reasons for governance review.
+
+## 🏛️ Why Protocols/DAOs Should Use This
+
+Large treasury organizations (e.g., Aave-scale DAOs and similarly governed protocols) care less about "AI magic" and more about **governance safety, reproducibility, and accountability**.  
+RDA aligns with those requirements:
+
+- **Governance first**: recommendations are anchored to approved mandate policy, not ad-hoc operator judgment.
+- **Operational speed with controls**: compresses research/proposal cycle from days to a single policy-driven run.
+- **Institutional auditability**: explicit policy snapshot + recommendation output per run provides strong compliance artifacts.
+- **Transparent risk posture**: clear filters, deterministic scoring, and per-pool rationale make proposals reviewable by risk committees.
+- **Safe adoption path**: DAOs can start in proposal-only mode, then adopt Phase 2 execution controls when governance is ready.
 
 ## 🔮 Future Scope
 
-### Phase 1 (Current - MVP)
-- ✅ Natural language input processing
-- ✅ Pool discovery and filtering
-- ✅ Risk analysis and scoring
-- ✅ Beautiful recommendation output
+Future work remains focused on **execution safety** and **enterprise trust layers**:
 
-### Phase 2 (Next)
-- 🚧 **Single-click transaction flow**: Prepare transactions and show "Sign & Execute" UX
-- 🚧 **Enhanced risk models**: More sophisticated risk scoring algorithms
-- 🚧 **Multi-chain support**: Expand beyond single blockchain
-
-### Phase 3 (Advanced)
-- 🔮 **Continuous portfolio management**: Periodic rebalancing agents
-- 🔮 **Multi-user shared strategies**: Publish strategies on Agentverse
-- 🔮 **On-chain execution**: Executor agents with guardrails & multisig
-- 🔮 **Governance & social trading**: Follow curated strategies from vetted stewards
+- Multisig/timelock execution modules under explicit mandate limits
+- Circuit-breaker and emergency runbooks
+- Tamper-evident audit chains with optional on-chain anchoring
+- Monitoring and reallocation triggers with governance approval workflows
 
 ## 🚀 Deployment Guide
 
