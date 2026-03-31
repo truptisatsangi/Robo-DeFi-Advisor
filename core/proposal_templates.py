@@ -3,6 +3,7 @@ Governance proposal templates — Snapshot / Tally / Commonwealth compatible mar
 Returned as proposal_draft (no auto-submit in MVP).
 """
 
+from datetime import datetime, timezone
 from typing import Any, Dict, List, Optional
 
 
@@ -26,6 +27,26 @@ def _format_allocation_table(allocation: Dict[str, Any]) -> str:
     return "\n".join(lines)
 
 
+def _format_human_timestamps(raw_timestamp: str) -> tuple[str, str]:
+    """
+    Convert ISO timestamp into human-friendly UTC and local labels.
+    Returns (utc_label, local_label).
+    """
+    try:
+        dt = datetime.fromisoformat(str(raw_timestamp).replace("Z", "+00:00"))
+        if dt.tzinfo is None:
+            dt_local = dt.astimezone()
+        else:
+            dt_local = dt.astimezone()
+        dt_utc = dt_local.astimezone(timezone.utc)
+        utc_label = dt_utc.strftime("%d %b %Y, %H:%M UTC")
+        local_tz = dt_local.tzname() or dt_local.strftime("UTC%z")
+        local_label = dt_local.strftime("%d %b %Y, %H:%M") + f" {local_tz}"
+        return utc_label, local_label
+    except (ValueError, TypeError):
+        return str(raw_timestamp), str(raw_timestamp)
+
+
 def format_snapshot_proposal(
     decision_response: Dict[str, Any],
     mandate_id: str,
@@ -43,6 +64,8 @@ def format_snapshot_proposal(
 
     criteria = decision_response.get("criteria") or decision_response.get("user_intent") or {}
     amount = criteria.get("amount_usd") or criteria.get("amount") or "—"
+    generated_at = decision_response.get("timestamp") or datetime.now(timezone.utc).isoformat()
+    generated_utc, generated_local = _format_human_timestamps(generated_at)
 
     has_allocation = allocation and allocation.get("allocations")
 
@@ -74,7 +97,11 @@ Allocate **${amount:,.0f}** from treasury across **{n_pools} pool{"s" if n_pools
                 expl = ". ".join(expl)
             protocol = a.get("protocol", "—")
             pct = a.get("pct", 0)
-            body += f"- **{protocol} ({pct}%):** {expl or 'Met policy thresholds and ranking criteria.'}\n"
+            body += (
+                f"- **{protocol} ({pct}%):** {expl or 'Met policy thresholds and ranking criteria.'}\n"
+                f"  _Mandate: `{mandate_id}` | Generated (UTC): `{generated_utc}` | Local: `{generated_local}`_\n"
+                "---\n"
+            )
     else:
         # Fallback: single-pool format
         pool = decision_response["optimalPool"]
@@ -109,6 +136,8 @@ Allocate **${amount}** from treasury to **{protocol}** on **{chain}**.
 ### Mandate & approval
 - **Mandate ID:** {mandate_id}
 - **Approval Ref:** {approval_ref}
+- **Generated At (UTC):** {generated_utc}
+- **Generated At (Local):** {generated_local}
 """
 
     alternatives = decision_response.get("alternatives") or []

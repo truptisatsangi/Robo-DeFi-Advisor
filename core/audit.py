@@ -7,7 +7,7 @@ import copy
 import json
 import logging
 import os
-from datetime import datetime
+from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any, Dict
 from uuid import uuid4
@@ -38,6 +38,23 @@ def _safe_serialize(obj: Any) -> str:
         return json.dumps({"_serialization_error": True, "run_id": obj.get("run_id", "?")})
 
 
+def _format_human_timestamps(raw_timestamp: str) -> tuple[str, str]:
+    """Return (utc_label, local_label) for an ISO timestamp."""
+    try:
+        dt = datetime.fromisoformat(str(raw_timestamp).replace("Z", "+00:00"))
+        if dt.tzinfo is None:
+            dt_local = dt.astimezone()
+        else:
+            dt_local = dt.astimezone()
+        dt_utc = dt_local.astimezone(timezone.utc)
+        utc_label = dt_utc.strftime("%d %b %Y, %H:%M UTC")
+        local_tz = dt_local.tzname() or dt_local.strftime("UTC%z")
+        local_label = dt_local.strftime("%d %b %Y, %H:%M") + f" {local_tz}"
+        return utc_label, local_label
+    except (ValueError, TypeError):
+        return str(raw_timestamp), str(raw_timestamp)
+
+
 def log_recommendation(
     run_id: str,
     mandate_id: str,
@@ -51,15 +68,30 @@ def log_recommendation(
     d = _audit_dir()
     d.mkdir(parents=True, exist_ok=True)
     path = d / "recommendations.ndjson"
+    readable_path = d / "recommendations_readable.log"
+    generated_at = datetime.utcnow().isoformat() + "Z"
+    generated_utc, generated_local = _format_human_timestamps(generated_at)
     entry = {
         "run_id": run_id,
         "mandate_id": mandate_id,
         "policy_snapshot": policy_snapshot,
         "recommendation_output": recommendation_output,
-        "timestamp": datetime.utcnow().isoformat() + "Z",
+        "timestamp": generated_at,
     }
     with open(path, "a") as f:
         f.write(_safe_serialize(entry) + "\n")
+    # Human-readable log with separators for easier manual inspection.
+    with open(readable_path, "a") as f:
+        f.write(
+            "===== Treasury Recommendation Entry | "
+            f"UTC: {generated_utc} | Local: {generated_local} =====\n"
+        )
+        f.write(f"Mandate: {mandate_id}\n")
+        f.write(f"Run ID: {run_id}\n")
+        f.write(f"Generated At (UTC): {generated_utc}\n")
+        f.write(f"Generated At (Local): {generated_local}\n")
+        f.write(json.dumps(entry, indent=2, default=str))
+        f.write("\n----- End Entry -----\n\n")
 
 
 def create_run_id() -> str:
