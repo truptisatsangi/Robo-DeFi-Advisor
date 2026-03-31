@@ -4,6 +4,7 @@ Flow: load mandate → validate policy → discovery → risk → decision → e
 """
 
 import asyncio
+import copy
 import logging
 import sys
 from pathlib import Path
@@ -42,15 +43,8 @@ def _policy_to_criteria(mandate_policy: Dict[str, Any]) -> Dict[str, Any]:
     """Build criteria dict from mandate policy (may be dict or need TreasuryPolicy)."""
     if not mandate_policy:
         return {}
-    try:
-        policy = TreasuryPolicy.model_validate(mandate_policy)
-        return policy.to_criteria_dict()
-    except Exception:
-        # Already a dict with expected keys
-        d = dict(mandate_policy)
-        if "min_pool_tvl_usd" in d and "min_tvl" not in d:
-            d["min_tvl"] = d["min_pool_tvl_usd"]
-        return d
+    policy = TreasuryPolicy.model_validate(mandate_policy)
+    return policy.to_criteria_dict()
 
 
 def _filter_risk_by_policy(analyses: List[Dict[str, Any]], criteria: Dict[str, Any]) -> List[Dict[str, Any]]:
@@ -109,7 +103,16 @@ async def run_treasury_recommendation(
     policy_dict = mandate.get("policy") or {}
     if amount_usd is not None:
         policy_dict = {**policy_dict, "amount_usd": amount_usd}
-    criteria = _policy_to_criteria(policy_dict)
+    try:
+        criteria = _policy_to_criteria(policy_dict)
+    except Exception as e:
+        return {
+            "success": False,
+            "run_id": run_id,
+            "error": f"Invalid mandate policy: {e}",
+            "recommendation": None,
+            "proposal_draft": None,
+        }
 
     # 2. Validate allowed_protocols
     allowed = policy_dict.get("allowed_protocols") or []
@@ -199,8 +202,9 @@ async def run_treasury_recommendation(
     max_pool_pct = criteria.get("max_tvl_per_pool_pct")
     allocation_result = allocate_across_pools(all_scored, total_amount, max_pool_pct)
 
+    recommended_pools = copy.deepcopy([optimal] + (decision_response.get("alternatives") or []))
     recommendation = {
-        "recommended_pools": [optimal] + (decision_response.get("alternatives") or []),
+        "recommended_pools": recommended_pools,
         "allocation": allocation_result["allocations"],
         "expected_portfolio_apy": allocation_result["expected_portfolio_apy"],
         "total_allocated_usd": allocation_result["total_allocated_usd"],

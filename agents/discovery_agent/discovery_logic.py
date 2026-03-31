@@ -17,7 +17,7 @@ _agent_dir = Path(__file__).resolve().parent
 if str(_agent_dir) not in sys.path:
     sys.path.insert(0, str(_agent_dir))
 
-from core.protocol_registry import PROTOCOL_REGISTRY, validate_protocols
+from core.protocol_registry import PROTOCOL_REGISTRY, get_protocol, validate_protocols
 from services.defillama_client import DeFiLlamaClient, YieldProtocol
 from services.protocol_apy import get_secondary_apy
 
@@ -97,8 +97,8 @@ class DiscoveryLogic:
     # Filtering + ranking
     # ------------------------------
     def filter_pools_by_criteria(self, pools: List[Pool], criteria: Dict[str, Any]) -> List[Pool]:
-        """Filter pools according to provided criteria. Uses protocol registry when allowed_protocols provided."""
-        # Protocol allowlist: from registry if policy specifies allowed_protocols, else default trusted
+        """Filter pools according to provided policy criteria using protocol registry metadata."""
+        # Protocol allowlist: from registry if policy specifies allowed_protocols, else default trusted registry entries
         allowed_protocols_raw: List[str] = criteria.get("allowed_protocols") or []
         if allowed_protocols_raw:
             valid_names, invalid_names = validate_protocols(allowed_protocols_raw)
@@ -111,11 +111,7 @@ class DiscoveryLogic:
             }
         else:
             allowed_protocol_set = {
-                "uniswap", "uniswap-v2", "uniswap-v3",
-                "compound", "compound-v2", "compound-v3",
-                "aave", "aave-v2", "aave-v3",
-                "venus", "curve", "curve-dex", "pendle",
-                "pancakeswap", "pancake", "balancer", "balancer-v2", "yearn",
+                key for key, entry in PROTOCOL_REGISTRY.items() if key == entry.name
             }
 
         allowed_chains: List[str] = [c.strip().lower() for c in (criteria.get("allowed_chains") or []) if c]
@@ -130,9 +126,20 @@ class DiscoveryLogic:
                 continue
 
             protocol_lower = p.protocol.lower()
-            if protocol_lower not in allowed_protocol_set:
+            proto_valid, _ = validate_protocols([protocol_lower])
+            if not proto_valid:
                 continue
-            if allowed_chains and (p.chain or "").strip().lower() not in allowed_chains:
+            canonical_protocol = proto_valid[0]
+            if canonical_protocol not in allowed_protocol_set:
+                continue
+
+            chain_normalized = (p.chain or "").strip().lower()
+            if allowed_chains and chain_normalized not in allowed_chains:
+                continue
+
+            protocol_entry = get_protocol(canonical_protocol)
+            supported_chains = {c.strip().lower() for c in protocol_entry.supported_chains}
+            if chain_normalized not in supported_chains:
                 continue
             if p.tvl < min_tvl or p.apy < min_apy:
                 continue
