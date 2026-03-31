@@ -12,6 +12,11 @@ _proj_root = Path(__file__).resolve().parents[2]
 if str(_proj_root) not in sys.path:
     sys.path.insert(0, str(_proj_root))
 
+# Ensure discovery agent dir on path for its local services package
+_agent_dir = Path(__file__).resolve().parent
+if str(_agent_dir) not in sys.path:
+    sys.path.insert(0, str(_agent_dir))
+
 from core.protocol_registry import PROTOCOL_REGISTRY, validate_protocols
 from services.defillama_client import DeFiLlamaClient, YieldProtocol
 from services.protocol_apy import get_secondary_apy
@@ -206,12 +211,22 @@ class DiscoveryLogic:
 
         logger.info(f"✅ Found {len(all_pools)} total pools")
 
+        # Filter + rank FIRST (fast, local) to reduce the set before expensive API calls
+        filtered = self.filter_pools_by_criteria(all_pools, criteria)
+        if not filtered:
+            logger.warning("⚠️ No pools match the specified criteria")
+            return []
+
+        ranked = self.rank_pools(filtered, criteria, top_n=criteria.get("top_n", 10))
+        logger.info(f"📊 {len(ranked)} pools after filter + rank (from {len(all_pools)} total)")
+
         # Cross-check APY across sources. Single-source APY is a trust assumption
         # that is inappropriate for a treasury product. See:
         # https://defillama.com/docs/api for primary source.
         # Protocol subgraphs (e.g. Aave, Compound) are the secondary source.
-        pools_after_apy_check: List[Pool] = []
-        for pool in all_pools:
+        # Runs only on the small ranked set (not all 19k pools).
+        verified: List[Pool] = []
+        for pool in ranked:
             secondary_apy = await get_secondary_apy(pool.protocol, pool.chain, pool.symbol)
             if secondary_apy is not None:
                 denom = max(pool.apy, secondary_apy, 0.01)
@@ -223,17 +238,11 @@ class DiscoveryLogic:
                         pool.id,
                     )
                     continue
-            pools_after_apy_check.append(pool)
-        all_pools = pools_after_apy_check
+            verified.append(pool)
 
-        # Filter + rank
-        filtered = self.filter_pools_by_criteria(all_pools, criteria)
-        if not filtered:
-            logger.warning("⚠️ No pools match the specified criteria")
+        if not verified:
+            logger.warning("⚠️ All ranked pools failed APY cross-check")
             return []
-            
-        ranked = self.rank_pools(filtered, criteria, top_n=criteria.get("top_n", 10))
-        logger.info("#### Discovery output #### %s", [p.__dict__ for p in ranked])
 
-        # Return just the list of pool dictionaries for the agent
-        return [p.__dict__ for p in ranked]
+        logger.info("#### Discovery output #### %s", [p.__dict__ for p in verified])
+        return [p.__dict__ for p in verified]
