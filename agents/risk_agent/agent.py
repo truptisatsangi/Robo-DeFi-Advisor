@@ -2,6 +2,7 @@
 import asyncio
 import aiohttp
 import logging
+import copy
 from typing import Dict, List, Any, Optional
 from datetime import datetime
 from uagents import Agent, Context, Model
@@ -185,8 +186,8 @@ async def analyze_pool(pool: Dict[str, Any]) -> Dict[str, Any]:
             "holderConcentration": conc.get("result"),
             "poolMetrics": metrics
         }),
-        # Include original pool data
-        "originalPoolData": metrics
+        # Keep a detached snapshot to avoid circular references in final JSON output.
+        "originalPoolData": copy.deepcopy(metrics)
     }
 
     # Optionally persist back to MeTTa (non-blocking)
