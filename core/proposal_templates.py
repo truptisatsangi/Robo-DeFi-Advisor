@@ -7,23 +7,35 @@ from datetime import datetime, timezone
 from typing import Any, Dict, List, Optional
 
 
+def _pool_verify_link(a: Dict[str, Any]) -> str:
+    """Return a markdown link for pool verification, or a plain pool_id fallback."""
+    url = (a.get("url") or "").strip()
+    pool_id = a.get("pool_id", "")
+    if url:
+        return f"[View ↗]({url})"
+    if pool_id:
+        return f"[DeFiLlama ↗](https://defillama.com/yields/pool/{pool_id})"
+    return "—"
+
+
 def _format_allocation_table(allocation: Dict[str, Any]) -> str:
     """Build a markdown table for the multi-pool allocation split."""
     allocs = allocation.get("allocations") or []
     if not allocs:
         return ""
     lines = [
-        "| Pool / Protocol | Chain | Allocation | Amount | APY | Risk |",
-        "| --- | --- | --- | --- | --- | --- |",
+        "| Pool / Protocol | Chain | Allocation | Amount | APY | Risk | Verify |",
+        "| --- | --- | --- | --- | --- | --- | --- |",
     ]
     for a in allocs:
         protocol = a.get("protocol", "—")
         chain = a.get("chain", "—")
         pct = a.get("pct", 0)
         amt = a.get("amount_usd", 0)
-        apy = a.get("apy", 0)
+        apy = round(a.get("apy", 0), 2)
         risk = a.get("risk_score", "—")
-        lines.append(f"| {protocol} | {chain} | {pct}% | ${amt:,.0f} | {apy}% | {risk}/100 |")
+        link = _pool_verify_link(a)
+        lines.append(f"| {protocol} | {chain} | {pct}% | ${amt:,.0f} | {apy}% | {risk}/100 | {link} |")
     return "\n".join(lines)
 
 
