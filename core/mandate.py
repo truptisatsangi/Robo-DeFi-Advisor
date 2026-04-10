@@ -6,7 +6,7 @@ import json
 import os
 from datetime import datetime
 from pathlib import Path
-from typing import Any, Dict, Optional
+from typing import Any, Dict, List, Optional
 from .treasury_policy import TreasuryPolicy
 
 
@@ -89,6 +89,31 @@ def get_mandate(mandate_id: str, dao_id: Optional[str] = None) -> Dict[str, Any]
     Returns mandate dict; policy is under key 'policy' (dict or TreasuryPolicy-compatible).
     """
     return load_mandate(mandate_id, dao_id)
+
+
+def list_mandates(dao_id: Optional[str] = None) -> List[Dict[str, Any]]:
+    """
+    List mandates from storage.
+    If dao_id is provided, returns mandates for that DAO only; otherwise all.
+    """
+    md = _mandates_dir()
+    if not md.exists():
+        return []
+    mandates: List[Dict[str, Any]] = []
+    dao_dirs = [md / dao_id] if dao_id else [p for p in md.iterdir() if p.is_dir()]
+    for d in dao_dirs:
+        if not d.exists() or not d.is_dir():
+            continue
+        for mandate_file in d.glob("*.json"):
+            try:
+                with open(mandate_file, "r") as f:
+                    data = json.load(f)
+                data["is_expired"] = is_mandate_expired(data)
+                mandates.append(data)
+            except (json.JSONDecodeError, OSError):
+                continue
+    mandates.sort(key=lambda m: str(m.get("mandate_id", "")))
+    return mandates
 
 
 def save_mandate(dao_id: str, mandate_id: str, mandate: Dict[str, Any]) -> None:

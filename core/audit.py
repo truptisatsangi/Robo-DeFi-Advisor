@@ -9,7 +9,7 @@ import logging
 import os
 from datetime import datetime, timezone
 from pathlib import Path
-from typing import Any, Dict
+from typing import Any, Dict, List, Optional
 from uuid import uuid4
 
 logger = logging.getLogger(__name__)
@@ -97,3 +97,38 @@ def log_recommendation(
 def create_run_id() -> str:
     """Generate a new run_id for a treasury run."""
     return str(uuid4())
+
+
+def read_recommendation_entries(limit: Optional[int] = None) -> List[Dict[str, Any]]:
+    """Read recommendation entries from NDJSON audit log."""
+    path = _audit_dir() / "recommendations.ndjson"
+    if not path.exists():
+        return []
+    entries: List[Dict[str, Any]] = []
+    with open(path, "r") as f:
+        for line in f:
+            line = line.strip()
+            if not line:
+                continue
+            try:
+                entries.append(json.loads(line))
+            except json.JSONDecodeError:
+                continue
+    if limit is not None:
+        return entries[-limit:]
+    return entries
+
+
+def get_recommendation_by_run_id(run_id: str) -> Optional[Dict[str, Any]]:
+    """Return one recommendation entry for the given run_id, if present."""
+    entries = read_recommendation_entries()
+    for entry in reversed(entries):
+        if entry.get("run_id") == run_id:
+            return entry
+    return None
+
+
+def get_latest_recommendation() -> Optional[Dict[str, Any]]:
+    """Return the most recent recommendation entry."""
+    entries = read_recommendation_entries(limit=1)
+    return entries[0] if entries else None
