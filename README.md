@@ -18,6 +18,7 @@
 - [Phase 1 (Implemented)](#-phase-1-implemented-mvp)
 - [Phase 2 (Planned)](#-phase-2-planned-post-mvp)
 - [Quick Start](#-quick-start)
+- [Frontend and API (Institutional MVP)](#-frontend-and-api-institutional-mvp)
 - [Agent Configuration](#-agent-configuration)
 - [Beautiful Output Format](#-beautiful-output-format)
 - [Protocols & Tech Stack](#-protocols--tech-stack)
@@ -159,6 +160,62 @@ ASI:One → User (explainable response)
    ```bash
    python3 -m pytest tests/
    ```
+
+## 🖥️ Frontend and API (Institutional MVP)
+
+This repository now includes a minimal institutional dashboard stack:
+
+- Backend API: `api/app.py` (FastAPI)
+- Frontend app: `frontend/` (React + Tailwind + React Query)
+
+### Run API service
+
+```bash
+uvicorn api.app:app --reload --port 8000
+```
+
+Available endpoints:
+
+- `POST /api/recommendations/run`
+- `GET /api/mandates`
+- `GET /api/mandates/{mandate_id}`
+- `GET /api/runs/latest`
+- `GET /api/runs/{run_id}`
+- `GET /api/audit/latest`
+- `GET /api/audit/export?format=ndjson|json`
+
+### Run frontend
+
+```bash
+cd frontend
+npm install
+npm run dev
+```
+
+Frontend pages:
+
+- `/dashboard`: run form (required + optional fields), 4 KPI cards, stage filtering timeline, recommendation table, proposal draft copy
+- `/mandates`: mandate list and status view
+- `/runs/:run_id`: full run payload + stage telemetry
+- `/settings`: non-sensitive display controls
+
+### Stage filtering telemetry exposed to UI
+
+The recommendation response now includes `pipeline_stats`:
+
+- `pipeline_stats.discovery`: total fetched, policy-filtered, top-N ranked, APY-crosschecked
+- `pipeline_stats.risk`: input candidates and post-risk-filter count
+- `pipeline_stats.decision`: scored candidates and recommended count
+- `pipeline_stats.timestamps`: run start/end UTC
+
+### Frontend tests
+
+Run frontend tests:
+
+```bash
+cd frontend
+npm run test
+```
 
 ## ✅ Phase 1 (Implemented MVP)
 
