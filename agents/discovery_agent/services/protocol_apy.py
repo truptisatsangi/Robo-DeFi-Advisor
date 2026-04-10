@@ -9,7 +9,7 @@ import aiohttp
 
 logger = logging.getLogger(__name__)
 
-_REQUEST_TIMEOUT = aiohttp.ClientTimeout(total=10)
+_REQUEST_TIMEOUT = aiohttp.ClientTimeout(total=4)
 
 # ---------------------------------------------------------------------------
 # Cache — avoids repeated API calls within one discovery run

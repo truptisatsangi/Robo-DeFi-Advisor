@@ -129,8 +129,9 @@ async def analyze_pool(pool: Dict[str, Any]) -> Dict[str, Any]:
         f"risk_score({pool_id}, Score)"
     ]
 
-    # execute queries in parallel (each returns dict with result/confidence or fallback)
-    results = await asyncio.gather(*[query_metta(q) for q in queries])
+    # execute queries in parallel, sharing one session across all 6 queries
+    async with aiohttp.ClientSession() as session:
+        results = await asyncio.gather(*[query_metta(q, session) for q in queries])
 
     # unpack results safely
     cv = results[0] or {}
@@ -203,20 +204,28 @@ async def analyze_pool(pool: Dict[str, Any]) -> Dict[str, Any]:
 # ------------------------------
 # MeTTa helpers (query/assert)
 # ------------------------------
-async def query_metta(fact: str) -> Dict[str, Any]:
-    """Query MeTTa knowledge graph, with fallback to empty result on error."""
-    try:
-        async with aiohttp.ClientSession() as session:
-            async with session.post(f"{METTA_ENDPOINT}/query", json={"fact": fact}, headers={"Content-Type": "application/json"}) as resp:
+async def query_metta(fact: str, session: Optional[aiohttp.ClientSession] = None) -> Dict[str, Any]:
+    """Query MeTTa knowledge graph, with fallback to empty result on error.
+    Accepts an optional shared session to avoid per-query TCP connection overhead."""
+    async def _do_query(s: aiohttp.ClientSession) -> Dict[str, Any]:
+        try:
+            async with s.post(
+                f"{METTA_ENDPOINT}/query",
+                json={"fact": fact},
+                headers={"Content-Type": "application/json"},
+            ) as resp:
                 if resp.status == 200:
-                    logger.info(f"Metta response {resp}")
                     return await resp.json()
-                else:
-                    logger.debug(f"MeTTa returned {resp.status} for {fact}")
-                    return {"result": None, "confidence": 0}
-    except Exception as e:
-        logger.debug(f"MeTTa unreachable for {fact}: {e}")
-        return {"result": None, "confidence": 0}
+                logger.debug(f"MeTTa returned {resp.status} for {fact}")
+                return {"result": None, "confidence": 0}
+        except Exception as e:
+            logger.debug(f"MeTTa unreachable for {fact}: {e}")
+            return {"result": None, "confidence": 0}
+
+    if session is not None:
+        return await _do_query(session)
+    async with aiohttp.ClientSession() as s:
+        return await _do_query(s)
 
 async def assert_metta(fact: str) -> Dict[str, Any]:
     """Assert a fact into MeTTa; returns response or fallback."""

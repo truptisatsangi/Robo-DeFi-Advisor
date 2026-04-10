@@ -241,8 +241,8 @@ class DiscoveryLogic:
         # https://defillama.com/docs/api for primary source.
         # Protocol subgraphs (e.g. Aave, Compound) are the secondary source.
         # Runs only on the small ranked set (not all 19k pools).
-        verified: List[Pool] = []
-        for pool in ranked:
+        # All cross-checks run concurrently to avoid sequential latency.
+        async def _check_pool_apy(pool: Pool) -> Optional[Pool]:
             secondary_apy = await get_secondary_apy(pool.protocol, pool.chain, pool.symbol)
             if secondary_apy is not None:
                 denom = max(pool.apy, secondary_apy, 0.01)
@@ -253,8 +253,11 @@ class DiscoveryLogic:
                         "Excluding from recommendations.",
                         pool.id,
                     )
-                    continue
-            verified.append(pool)
+                    return None
+            return pool
+
+        crosscheck_results = await asyncio.gather(*[_check_pool_apy(p) for p in ranked])
+        verified: List[Pool] = [p for p in crosscheck_results if p is not None]
 
         if not verified:
             logger.warning("⚠️ All ranked pools failed APY cross-check")

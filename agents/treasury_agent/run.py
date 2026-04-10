@@ -179,8 +179,11 @@ async def run_treasury_recommendation(
         log_recommendation(run_id, mandate_id, policy_dict, out)
         return out
 
-    # 4. Risk analysis (in-process)
+    # 4. Risk analysis (in-process) — all pools analyzed concurrently
     pipeline_stats["risk"]["input_candidates"] = len(pools)
+    normalized = [{"pool_id": p.get("id"), "metrics": p} for p in pools]
+    raw_analyses = await asyncio.gather(*[analyze_pool(n) for n in normalized], return_exceptions=True)
+    risk_analyses = [r for r in raw_analyses if isinstance(r, dict)]
     risk_analyses = _filter_risk_by_policy(risk_analyses, criteria)
     pipeline_stats["risk"]["after_risk_policy_filters"] = len(risk_analyses)
     # Only pass pools that passed risk policy to decision
