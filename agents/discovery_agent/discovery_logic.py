@@ -195,9 +195,15 @@ class DiscoveryLogic:
     # Orchestration
     # ------------------------------
    
-    async def discover_pools_async(self, criteria: Dict[str, Any]) -> List[Dict[str, Any]]:
-        """Main entry point for pool discovery."""
+    async def _discover_pools_with_stats(self, criteria: Dict[str, Any]) -> Dict[str, Any]:
+        """Main discovery pipeline that returns pools and stage counts."""
         logger.info("🚀 Running discovery with criteria %s", criteria)
+        stats: Dict[str, int] = {
+            "total_fetched": 0,
+            "after_policy_filters": 0,
+            "after_rank_top_n": 0,
+            "after_apy_crosscheck": 0,
+        }
 
         # Gather pools from all sources
         llama_pools = await asyncio.gather(
@@ -211,20 +217,23 @@ class DiscoveryLogic:
         for pool_list in llama_pools:
             if pool_list:  # Check if the list is not empty
                 all_pools.extend(pool_list)
+        stats["total_fetched"] = len(all_pools)
         
         if not all_pools:
             logger.warning("⚠️ No pools found from any source")
-            return []
+            return {"pools": [], "stats": stats}
 
         logger.info(f"✅ Found {len(all_pools)} total pools")
 
         # Filter + rank FIRST (fast, local) to reduce the set before expensive API calls
         filtered = self.filter_pools_by_criteria(all_pools, criteria)
+        stats["after_policy_filters"] = len(filtered)
         if not filtered:
             logger.warning("⚠️ No pools match the specified criteria")
-            return []
+            return {"pools": [], "stats": stats}
 
         ranked = self.rank_pools(filtered, criteria, top_n=criteria.get("top_n", 10))
+        stats["after_rank_top_n"] = len(ranked)
         logger.info(f"📊 {len(ranked)} pools after filter + rank (from {len(all_pools)} total)")
 
         # Cross-check APY across sources. Single-source APY is a trust assumption
@@ -249,7 +258,17 @@ class DiscoveryLogic:
 
         if not verified:
             logger.warning("⚠️ All ranked pools failed APY cross-check")
-            return []
+            return {"pools": [], "stats": stats}
 
+        stats["after_apy_crosscheck"] = len(verified)
         logger.info("#### Discovery output #### %s", [p.__dict__ for p in verified])
-        return [p.__dict__ for p in verified]
+        return {"pools": [p.__dict__ for p in verified], "stats": stats}
+
+    async def discover_pools_async(self, criteria: Dict[str, Any]) -> List[Dict[str, Any]]:
+        """Backwards-compatible pool discovery API returning only pools."""
+        result = await self._discover_pools_with_stats(criteria)
+        return result["pools"]
+
+    async def discover_pools_with_stats(self, criteria: Dict[str, Any]) -> Dict[str, Any]:
+        """Discovery API returning pools plus stage telemetry."""
+        return await self._discover_pools_with_stats(criteria)

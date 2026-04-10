@@ -119,18 +119,32 @@ class DecisionAgent:
     # -------------------------------
     def filter_pools_by_criteria(self, pools: List[Dict[str, Any]], criteria: Dict[str, Any]) -> List[Dict[str, Any]]:
         """Filter pools based on user criteria."""
-        # Discovery agent already filtered for min_apy and min_tvl, but let's add safety checks
+        min_apy = criteria.get("min_apy", 0)
+        max_apy = criteria.get("max_apy")
+        min_tvl = criteria.get("min_pool_tvl_usd", 0)
+        allowed_protocols = [p.lower() for p in criteria.get("allowed_protocols", [])]
+        allowed_chains = [c.lower() for c in criteria.get("allowed_chains", [])]
+
         filtered = []
         for pool in pools:
             pool_dict = pool if isinstance(pool, dict) else pool.__dict__
-            
-            # Log pool data for debugging
-            apy = pool_dict.get("apy", 0)
-            tvl = pool_dict.get("tvl", 0)
-            protocol = pool_dict.get("protocol", "Unknown")
-            print(f"   📊 Pool {pool_dict.get('id', 'unknown')[:10]}... - {protocol} - APY: {apy}%, TVL: ${tvl:,.0f}")
-            
-            # Temporarily include all pools to see what we're working with
+
+            apy = pool_dict.get("apy") or 0
+            tvl = pool_dict.get("tvl") or 0
+            protocol = (pool_dict.get("protocol") or "").lower()
+            chain = (pool_dict.get("chain") or "").lower()
+
+            if apy < min_apy:
+                continue
+            if max_apy is not None and apy > max_apy:
+                continue
+            if tvl < min_tvl:
+                continue
+            if allowed_protocols and protocol not in allowed_protocols:
+                continue
+            if allowed_chains and chain not in allowed_chains:
+                continue
+
             filtered.append(pool_dict)
         return filtered
 

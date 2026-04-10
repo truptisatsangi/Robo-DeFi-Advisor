@@ -7,6 +7,7 @@ import asyncio
 import copy
 import logging
 import sys
+from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any, Dict, List, Optional
 
@@ -78,6 +79,31 @@ async def run_treasury_recommendation(
     Input: mandate_id, optional amount_usd override, optional dao_id to locate mandate.
     """
     run_id = create_run_id()
+    started_at = datetime.now(timezone.utc)
+    pipeline_stats: Dict[str, Any] = {
+        "discovery": {
+            "total_fetched": 0,
+            "after_policy_filters": 0,
+            "after_rank_top_n": 0,
+            "after_apy_crosscheck": 0,
+        },
+        "risk": {
+            "input_candidates": 0,
+            "after_risk_policy_filters": 0,
+        },
+        "decision": {
+            "scored_candidates": 0,
+            "recommended_count": 0,
+        },
+        "timestamps": {
+            "started_at_utc": started_at.isoformat(),
+            "completed_at_utc": None,
+        },
+    }
+
+    def _finalize_stats() -> Dict[str, Any]:
+        pipeline_stats["timestamps"]["completed_at_utc"] = datetime.now(timezone.utc).isoformat()
+        return pipeline_stats
     try:
         # 1. Load mandate
         mandate = get_mandate(mandate_id, dao_id)
@@ -89,6 +115,7 @@ async def run_treasury_recommendation(
             "renewal_required": False,
             "recommendation": None,
             "proposal_draft": None,
+            "pipeline_stats": _finalize_stats(),
         }
     except MandateExpiredError as e:
         return {
@@ -98,6 +125,7 @@ async def run_treasury_recommendation(
             "renewal_required": True,
             "recommendation": None,
             "proposal_draft": None,
+            "pipeline_stats": _finalize_stats(),
         }
 
     policy_dict = mandate.get("policy") or {}
@@ -112,6 +140,7 @@ async def run_treasury_recommendation(
             "error": f"Invalid mandate policy: {e}",
             "recommendation": None,
             "proposal_draft": None,
+            "pipeline_stats": _finalize_stats(),
         }
 
     # 2. Validate allowed_protocols
@@ -125,11 +154,14 @@ async def run_treasury_recommendation(
                 "error": f"Unknown protocols in policy: {invalid_names}. Use protocol registry names.",
                 "recommendation": None,
                 "proposal_draft": None,
+                "pipeline_stats": _finalize_stats(),
             }
 
     # 3. Discovery
     discovery = DiscoveryLogic()
-    pools = await discovery.discover_pools_async(criteria)
+    discovery_result = await discovery.discover_pools_with_stats(criteria)
+    pools = discovery_result.get("pools") or []
+    pipeline_stats["discovery"] = discovery_result.get("stats") or pipeline_stats["discovery"]
     if not pools:
         out = {
             "success": True,
@@ -142,14 +174,15 @@ async def run_treasury_recommendation(
                 "message": "No pools matched the mandate criteria.",
             },
             "proposal_draft": "## Treasury Allocation Proposal\n\nNo pools matched the mandate criteria. Adjust policy or try again later.",
+            "pipeline_stats": _finalize_stats(),
         }
         log_recommendation(run_id, mandate_id, policy_dict, out)
         return out
 
     # 4. Risk analysis (in-process)
-    normalized = [{"pool_id": p["id"], "metrics": p} for p in pools]
-    risk_analyses = await asyncio.gather(*[analyze_pool(n) for n in normalized])
+    pipeline_stats["risk"]["input_candidates"] = len(pools)
     risk_analyses = _filter_risk_by_policy(risk_analyses, criteria)
+    pipeline_stats["risk"]["after_risk_policy_filters"] = len(risk_analyses)
     # Only pass pools that passed risk policy to decision
     risk_pool_ids = {a["poolId"] for a in risk_analyses}
     pools = [p for p in pools if p.get("id") in risk_pool_ids]
@@ -165,6 +198,7 @@ async def run_treasury_recommendation(
                 "message": "All pools were filtered out by risk policy.",
             },
             "proposal_draft": "## Treasury Allocation Proposal\n\nAll candidate pools were filtered out by risk policy. Consider relaxing risk constraints or adding protocols.",
+            "pipeline_stats": _finalize_stats(),
         }
         log_recommendation(run_id, mandate_id, policy_dict, out)
         return out
@@ -184,6 +218,7 @@ async def run_treasury_recommendation(
                 "message": decision_response.get("error") or "No pool selected.",
             },
             "proposal_draft": "## Treasury Allocation Proposal\n\n" + (decision_response.get("error") or "No pool selected."),
+            "pipeline_stats": _finalize_stats(),
         }
         log_recommendation(run_id, mandate_id, policy_dict, out)
         return out
@@ -203,6 +238,8 @@ async def run_treasury_recommendation(
     allocation_result = allocate_across_pools(all_scored, total_amount, max_pool_pct)
 
     recommended_pools = copy.deepcopy([optimal] + (decision_response.get("alternatives") or []))
+    pipeline_stats["decision"]["scored_candidates"] = len(all_scored)
+    pipeline_stats["decision"]["recommended_count"] = len(recommended_pools)
     recommendation = {
         "recommended_pools": recommended_pools,
         "allocation": allocation_result["allocations"],
@@ -238,4 +275,5 @@ async def run_treasury_recommendation(
         "approval_ref": mandate.get("approval_ref", ""),
         "recommendation": recommendation,
         "proposal_draft": proposal_draft,
+        "pipeline_stats": _finalize_stats(),
     }
