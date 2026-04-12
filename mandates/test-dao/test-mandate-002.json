@@ -1,0 +1,23 @@
+{
+  "mandate_id": "test-mandate-002",
+  "mandate_version": 1,
+  "dao_id": "test-dao",
+  "dao_name": "Test DAO",
+  "policy": {
+    "min_apy": 1.0,
+    "max_apy": null,
+    "risk": {
+      "max_level": "high",
+      "min_score": 20
+    },
+    "allowed_protocols": ["aave", "compound", "curve", "uniswap", "balancer", "pendle"],
+    "allowed_chains": ["ethereum", "arbitrum", "polygon", "optimism", "base"],
+    "max_tvl_per_pool_pct": 40.0,
+    "min_pool_tvl_usd": 1000000,
+    "amount_usd": 2000000,
+    "preference": "balanced"
+  },
+  "approval_ref": "Snapshot proposal #TEST-002",
+  "valid_from": "2025-01-01",
+  "valid_until": "2027-12-31"
+}
