@@ -50,10 +50,10 @@ Robo DeFi Advisor (RDA) converts a DAO-approved policy into:
 The codebase currently includes a full **Phase 1 MVP treasury recommendation pipeline**:
 
 - `core/treasury_policy.py`: structured `TreasuryPolicy` schema with validation (risk constraints, APY bounds, protocol whitelist validation).
-- `core/protocol_registry.py`: canonical protocol metadata and validation helpers.
+- `core/protocol_registry.py`: list of known DeFi protocols (name, chain, category) with helpers to check if a protocol is approved.
 - `core/mandate.py`: mandate load/save/expiry checks; blocks recommendations on expired mandate.
-- `agents/discovery_agent/discovery_logic.py`: policy-driven pool filtering, registry-aware protocol and chain checks.
-- `agents/risk_agent/agent.py` + treasury-level risk enforcement: policy `risk.min_score` and `risk.max_level` hard filters.
+- `agents/discovery_agent/discovery_logic.py`: fetches all pools from DeFiLlama, then filters them using the mandate's rules, and verifies APY against a secondary source before recommending.
+- `agents/risk_agent/agent.py` + treasury-level risk enforcement: policy `risk.min_score` and `risk.max_level` hard filters and MeTTa.
 - `agents/decision_agent/decision_logic.py`: deterministic scoring formula and ranking.
 - `core/explanation.py`: rule-based per-pool explanation for governance transparency.
 - `core/allocation.py`: constrained multi-pool allocation split.
@@ -70,18 +70,50 @@ The codebase currently includes a full **Phase 1 MVP treasury recommendation pip
 
 ## 🏗️ Architecture & Components
 
+There are two ways to interact with the system:
+
+**Flow 1 — ASI Chat interface (`main.py`)**
 ```
-User (ASI Chat) 
-   ↓ natural language
-ASI:One (NLP router / intent extraction)
-   ↓ intent (structured)
-Discovery Agent (uAgent) ←→ DeFi data sources (DeFiLlama, DexScreener, subgraphs)
-   ↓ candidate pools
-Risk Agent (uAgent + MeTTa rules)
-   ↓ risk-scored pools
+User
+   ↓ natural language message
+ASI:One Chat (delivers message to Treasury Agent)
+   ↓
+Treasury Agent (uAgent, main.py)
+   ↓ raw text forwarded as-is
+Discovery Agent (uAgent) ←→ DeFiLlama (pool fetch) + Aave/Compound/Curve/Yearn APIs (APY cross-check)
+   ↓ candidate pools (uAgent message)
+Risk Agent (uAgent)
+   ↓ risk-scored pools (uAgent message)
 Decision Agent (uAgent)
-   ↓ final recommendation
-ASI:One → User (explainable response)
+   ↓ final recommendation (uAgent message back to Treasury Agent)
+Treasury Agent → ASI:One → User (formatted response)
+```
+
+**Flow 2 — REST API (`api/app.py`, used by the frontend)**
+```
+User / Frontend
+   ↓ POST /api/recommendations/run  { mandate_id }
+FastAPI (api/app.py)
+   ↓
+Mandate check  (core/mandate.py) — blocks if expired or not found
+   ↓
+Protocol validation  (core/protocol_registry.py)
+   ↓
+Discovery  (discovery_logic.py) — fetches ~19k pools from DeFiLlama,
+           filters by mandate policy, ranks top-N, cross-checks APY
+   ↓ candidate pools
+Risk scoring  (risk_agent/agent.py, called in-process, not via uAgent)
+           — scores each pool 0-100, drops pools failing policy risk limits
+   ↓ risk-scored pools
+Decision ranking  (decision_logic.py, called in-process)
+           — normalises APY/risk/TVL, picks optimal pool + alternatives
+   ↓
+Explanation  (core/explanation.py) — per-pool reasoning text
+Allocation   (core/allocation.py)  — splits capital across pools
+Proposal     (core/proposal_templates.py) — Snapshot-ready markdown draft
+Audit log    (core/audit.py) — append-only NDJSON record of this run
+   ↓
+JSON response to frontend
 ```
 
 ### Key Components:
@@ -89,25 +121,31 @@ ASI:One → User (explainable response)
 - **🔧 uAgents** — Small autonomous agents responsible for one domain (Discovery, Risk, Decision)
 - **🌐 Agentverse listing** — Makes your advisor discoverable for others
 - **🔐 Fetch Network** — DID-based identity + encrypted messaging for agent-to-agent communications
-- **🧠 MeTTa** — Structured knowledge & rule engine for reasoning, provenance, and explainability
-- **💬 ASI:One** — Conversational front-end and intent router
+- **🧠 MeTTa** — Queried for on-chain facts (contract verification, exploit history, audit links); falls back to TVL/APY/protocol scoring when data is unavailable
+- **💬 ASI:One** — Chat interface that delivers messages to the Treasury Agent; intent extraction (NLP) is done by the Discovery Agent using the `asi1-mini` LLM
 
 ## 🔄 End-to-end Flow
 
-### Example Treasury Request:
-> "Generate recommendation under mandate `test-mandate-001` for $100,000 USDC."
+This describes the **REST API / frontend flow** (`POST /api/recommendations/run`), which is the primary path used by the dashboard.
+
+### Example Request:
+```json
+{ "mandate_id": "test-mandate-001", "amount_usd": 100000 }
+```
 
 ### System Processing:
 
-1. **Treasury Agent** loads mandate by `mandate_id`
-2. Mandate policy is validated (`TreasuryPolicy` + protocol registry)
-3. **Discovery Agent** fetches pools and applies policy constraints
-4. **Risk filtering** enforces `risk.min_score` and `risk.max_level`
-5. **Decision Agent** computes deterministic ranking score
-6. **Explanation layer** adds "why selected" to each recommendation
-7. **Allocation engine** computes split + expected portfolio APY
-8. **Proposal template** generates governance draft markdown
-9. **Audit logger** appends immutable run record (MVP file append)
+1. **Mandate check** — loads mandate by `mandate_id`; blocks if not found or expired
+2. **Policy validation** — validates `TreasuryPolicy` + protocol registry
+3. **Discovery** — fetches ~19k pools from DeFiLlama, filters by mandate policy, ranks top-N, cross-checks APY against Aave/Compound/Curve/Yearn APIs
+4. **Risk scoring** — scores each surviving pool 0–100 (TVL + protocol reputation + APY sustainability + exploit history); drops pools that fail `risk.min_score` or `risk.max_level`
+5. **Decision ranking** — normalises APY, risk score, and TVL across candidates; picks optimal pool + alternatives using deterministic formula
+6. **Explanation** — adds rule-based "why selected" text to each pool
+7. **Allocation** — splits capital across recommended pools respecting policy caps
+8. **Proposal** — generates Snapshot-ready governance markdown draft
+9. **Audit** — appends immutable NDJSON run record
+
+> **Chat flow difference**: when using the ASI Chat interface (`main.py`), the user sends free-text. The Discovery Agent uses the `asi1-mini` LLM to extract intent (amount, APY preference, risk preference) from the message — there is no mandate in this path. Risk and Decision steps still run the same logic.
 
 ## ⚡ Quick Start
 
@@ -136,9 +174,10 @@ ASI:One → User (explainable response)
    pip install -r requirements.txt
    ```
 
-4. **Set up environment variables**
+4. **Set up environment variables** — create a `.env` file in the project root:
    ```bash
-   export ASI_ONE_API_KEY="your_api_key_here"
+   ASI_ONE_API_KEY=your_asi_one_api_key       # used by Discovery Agent for intent extraction (asi1-mini LLM)
+   AGENTVERSE_API_KEY=your_agentverse_api_key  # used for agent registration on Agentverse
    ```
 
 5. **Start all agents**
@@ -299,29 +338,28 @@ The system now provides beautiful, user-friendly responses in ASI Chat:
 
 ## 🛠️ Protocols & Tech Stack
 
-- **ASI:One** — Natural language → intent router and chat UX
+- **ASI:One** — Chat interface; delivers user messages to the Treasury Agent
+- **asi1-mini LLM** — Used inside the Discovery Agent to parse free-text into structured intent (amount, APY, preference)
 - **uAgents** — Python micro-agents using agent runtime (send/receive messages)
 - **Agentverse** — Registry & discovery for agents
 - **Fetch Network** — DID identities, signed/encrypted agent messaging
-- **MeTTa** — Rule/knowledge system for explainable reasoning and provenance
-- **Data Sources**: DeFiLlama, DexScreener, subgraphs, CoinGecko (prices), Etherscan (verification)
+- **MeTTa** — Queried for on-chain risk data; falls back to formula-based scoring when unavailable
+- **Data Sources**: DeFiLlama (pool fetch), Aave V3 / Compound / Curve / Yearn APIs (APY cross-check only)
 
 ## 💬 Interaction Examples
 
 ### User Input:
 > "Invest $1000 in a way to get at least 8% APY. I prefer stablecoins and low risk."
 
-### System Processing:
+### Intent extracted by Discovery Agent (asi1-mini LLM):
 ```json
 {
-  "intent": "invest",
+  "action": "invest",
   "amount": 1000,
-  "currency": "USD",
-  "constraints": {
-    "min_apy": 0.08,
-    "tokens": ["USDC", "USDT"],
-    "risk": "low"
-  }
+  "min_apy": 8,
+  "max_apy": null,
+  "target_apy": null,
+  "preference": "low"
 }
 ```
 
@@ -329,26 +367,137 @@ The system now provides beautiful, user-friendly responses in ASI Chat:
 ```
 🎯 **INVESTMENT RECOMMENDATION** 🎯
 
-📊 **Recommended Pool:** `0x1234...abcd`
+📊 **Recommended Pool:**
 
-⚠️ **Risk Assessment:** 🟢 Low (Score: 85/100)
+💱 Symbol: USDC
+🏦 Protocol: Aave
+⛓️ Chain: Ethereum
+📈 APY: 8.20%
+💧 Total Value Locked: $1,200,000,000
+⚠️ Risk Assessment: 🟢 Low (Score: 82/100)
 
-💡 **Recommendations:**
-• ✅ Contract verified - low risk
-• ✅ Audit completed - trustworthy
-• ✅ High liquidity - stable investment
+💭 Risk Analysis:
+This pool has a LOW risk profile. ✓ Excellent liquidity with $1,200,000,000 TVL...
+✓ Aave is an established protocol with strong track record and audits.
+✓ Moderate APY (8.2%) suggests stable, sustainable returns.
+✓ No known exploit history.
 
-💰 **Investment Amount:** $1000
-🎯 **Your Preference:** Low
+🔒 Security Metrics:
+• Liquidity Depth: 🟢 Excellent
+• Protocol Reputation: 🟢 Established & Audited
+• Risk Level: 🟢 Low Risk
 
-✅ **Great Choice:** This pool has low risk and is suitable for conservative investments.
+🔗 Pool Link: https://defillama.com/protocol/aave
 
-Expected APY: 8.2%
-Pool address: 0x1234...abcd
-Liquidity: $1.2M
+💰 Your Investment: $1000
+🎯 Your Preference: Low
+
+✅ Great Choice: This pool has low risk and is suitable for conservative investments.
 
 ---
 *Powered by DeFi Risk Advisor*
+```
+> **Note**: Pool IDs are DeFiLlama UUIDs, not on-chain contract addresses. Contract verification and audit data shown in risk factors depend on MeTTa availability.
+
+## 📄 Sample End Output
+
+When you call `POST /api/recommendations/run`, the response includes two key parts: **allocation** and **proposal_draft**.
+
+### Allocation (JSON)
+
+This is what the API returns under `recommendation.allocation`:
+
+```json
+{
+  "allocations": [
+    {
+      "protocol": "aave-v3",
+      "chain": "Ethereum",
+      "apy": 8.2,
+      "risk_score": 82,
+      "risk_level": "low",
+      "pct": 40.0,
+      "amount_usd": 40000.00,
+      "tvl": 1200000000,
+      "url": "https://defillama.com/yields/pool/...",
+      "explanation": "APY 8.2% is within mandate bounds [3%–20%]. Protocol aave-v3 is on the approved list. Risk score 82 passes minimum 60."
+    },
+    {
+      "protocol": "compound-v3",
+      "chain": "Ethereum",
+      "apy": 6.9,
+      "risk_score": 78,
+      "risk_level": "low",
+      "pct": 35.0,
+      "amount_usd": 35000.00,
+      "tvl": 800000000,
+      "url": "https://defillama.com/yields/pool/...",
+      "explanation": "APY 6.9% is within mandate bounds. Protocol compound-v3 is on the approved list. Risk score 78 passes minimum 60."
+    },
+    {
+      "protocol": "curve",
+      "chain": "Ethereum",
+      "apy": 5.4,
+      "risk_score": 75,
+      "risk_level": "low",
+      "pct": 25.0,
+      "amount_usd": 25000.00,
+      "tvl": 500000000,
+      "url": "https://defillama.com/yields/pool/...",
+      "explanation": "APY 5.4% is within mandate bounds. Protocol curve is on the approved list. Risk score 75 passes minimum 60."
+    }
+  ],
+  "expected_portfolio_apy": 7.14,
+  "total_allocated_usd": 100000.00
+}
+```
+
+> Allocation is **score-weighted** (higher-scoring pools get more capital), capped at `max_tvl_per_pool_pct` from the mandate policy (default 40%). Pools with < 2% allocation are dropped.
+
+---
+
+### Proposal Draft (Markdown)
+
+This is what the API returns under `proposal_draft` — ready to paste into Snapshot or Tally:
+
+```markdown
+## Treasury Allocation Proposal
+
+Allocate **$100,000** from treasury across **3 pools**.
+
+### Portfolio summary
+- **Total allocated:** $100,000
+- **Expected portfolio APY:** 7.14%
+- **Number of pools:** 3
+
+### Allocation breakdown
+
+| Pool / Protocol | Chain    | Allocation | Amount    | APY  | Risk    | Verify       |
+| --------------- | -------- | ---------- | --------- | ---- | ------- | ------------ |
+| aave-v3         | Ethereum | 40.0%      | $40,000   | 8.2% | 82/100  | [View ↗](…) |
+| compound-v3     | Ethereum | 35.0%      | $35,000   | 6.9% | 78/100  | [View ↗](…) |
+| curve           | Ethereum | 25.0%      | $25,000   | 5.4% | 75/100  | [View ↗](…) |
+
+### Selection rationale
+
+- **aave-v3 (40%):** APY 8.2% is within mandate bounds [3%–20%]. Protocol aave-v3 is on the approved list. Risk score 82 passes minimum 60.
+  _Mandate: `test-mandate-001` | Generated (UTC): `12 Apr 2026, 10:30 UTC` | Local: `12 Apr 2026, 16:00 IST`_
+---
+- **compound-v3 (35%):** APY 6.9% is within mandate bounds. Protocol compound-v3 is on the approved list. Risk score 78 passes minimum 60.
+  _Mandate: `test-mandate-001` | Generated (UTC): `12 Apr 2026, 10:30 UTC` | Local: `12 Apr 2026, 16:00 IST`_
+---
+- **curve (25%):** APY 5.4% is within mandate bounds. Protocol curve is on the approved list. Risk score 75 passes minimum 60.
+  _Mandate: `test-mandate-001` | Generated (UTC): `12 Apr 2026, 10:30 UTC` | Local: `12 Apr 2026, 16:00 IST`_
+---
+
+### Mandate & approval
+- **Mandate ID:** test-mandate-001
+- **Approval Ref:** dao-vote-2026-03-15
+- **Generated At (UTC):** 12 Apr 2026, 10:30 UTC
+- **Generated At (Local):** 12 Apr 2026, 16:00 IST
+
+---
+*Generated by RDA Treasury Advisor. Review before publishing.*
 ```
 
 ## 🧮 Decision Formula and Rationale
@@ -423,11 +572,11 @@ Future work remains focused on **execution safety** and **enterprise trust layer
 # 1. Activate virtual environment
 source venv/bin/activate
 
-# 2. Start all agents in separate terminals
-python main.py                    # Main Agent (ASI Chat)
-python agents/discovery_agent/agent.py  # Discovery Agent
-python agents/risk_agent/agent.py       # Risk Agent
-python agents/decision_agent/agent.py   # Decision Agent, not needed now
+# 2. Start all agents in separate terminals (for ASI Chat flow)
+python main.py                          # Terminal 1 — Treasury Agent (ASI Chat)
+python agents/discovery_agent/agent.py  # Terminal 2 — Discovery Agent (intent extraction + pool fetch)
+python agents/risk_agent/agent.py       # Terminal 3 — Risk Agent
+python agents/decision_agent/agent.py   # Terminal 4 — Decision Agent
 
 # 3. Test in ASI Chat interface
 ```
