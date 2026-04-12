@@ -114,6 +114,15 @@ Proposal     (core/proposal_templates.py) — Snapshot-ready markdown draft
 Audit log    (core/audit.py) — append-only NDJSON record of this run
    ↓
 JSON response to frontend
+Decision ranking  (decision_logic.py, called in-process)
+           — normalises APY/risk/TVL, picks optimal pool + alternatives
+   ↓
+Explanation  (core/explanation.py) — per-pool reasoning text
+Allocation   (core/allocation.py)  — splits capital across pools
+Proposal     (core/proposal_templates.py) — Snapshot-ready markdown draft
+Audit log    (core/audit.py) — append-only NDJSON record of this run
+   ↓
+JSON response to frontend
 ```
 
 ### Key Components:
@@ -126,6 +135,12 @@ JSON response to frontend
 
 ## 🔄 End-to-end Flow
 
+This describes the **REST API / frontend flow** (`POST /api/recommendations/run`), which is the primary path used by the dashboard.
+
+### Example Request:
+```json
+{ "mandate_id": "test-mandate-001", "amount_usd": 100000 }
+```
 This describes the **REST API / frontend flow** (`POST /api/recommendations/run`), which is the primary path used by the dashboard.
 
 ### Example Request:
@@ -175,23 +190,26 @@ This describes the **REST API / frontend flow** (`POST /api/recommendations/run`
    ```
 
 4. **Set up environment variables** — create a `.env` file in the project root:
+4. **Set up environment variables** — create a `.env` file in the project root:
    ```bash
+   ASI_ONE_API_KEY=your_asi_one_api_key       # used by Discovery Agent for intent extraction (asi1-mini LLM)
+   AGENTVERSE_API_KEY=your_agentverse_api_key  # used for agent registration on Agentverse
    ASI_ONE_API_KEY=your_asi_one_api_key       # used by Discovery Agent for intent extraction (asi1-mini LLM)
    AGENTVERSE_API_KEY=your_agentverse_api_key  # used for agent registration on Agentverse
    ```
 
-5. **Start all agents**
+5. **Start all agents** (for ASI Chat flow):
    ```bash
-   # Terminal 1 - Main Agent (handles ASI Chat)
+   # Terminal 1 — Treasury Agent (ASI Chat entry point)
    python main.py
 
-   # Terminal 2 - Discovery Agent
+   # Terminal 2 — Discovery Agent (intent extraction + pool fetch)
    python agents/discovery_agent/agent.py
 
-   # Terminal 3 - Risk Agent  
+   # Terminal 3 — Risk Agent
    python agents/risk_agent/agent.py
 
-   # Terminal 4 - Decision Agent
+   # Terminal 4 — Decision Agent
    python agents/decision_agent/agent.py
    ```
 
@@ -340,9 +358,13 @@ The system now provides beautiful, user-friendly responses in ASI Chat:
 
 - **ASI:One** — Chat interface; delivers user messages to the Treasury Agent
 - **asi1-mini LLM** — Used inside the Discovery Agent to parse free-text into structured intent (amount, APY, preference)
+- **ASI:One** — Chat interface; delivers user messages to the Treasury Agent
+- **asi1-mini LLM** — Used inside the Discovery Agent to parse free-text into structured intent (amount, APY, preference)
 - **uAgents** — Python micro-agents using agent runtime (send/receive messages)
 - **Agentverse** — Registry & discovery for agents
 - **Fetch Network** — DID identities, signed/encrypted agent messaging
+- **MeTTa** — Queried for on-chain risk data; falls back to formula-based scoring when unavailable
+- **Data Sources**: DeFiLlama (pool fetch), Aave V3 / Compound / Curve / Yearn APIs (APY cross-check only)
 - **MeTTa** — Queried for on-chain risk data; falls back to formula-based scoring when unavailable
 - **Data Sources**: DeFiLlama (pool fetch), Aave V3 / Compound / Curve / Yearn APIs (APY cross-check only)
 
@@ -352,10 +374,16 @@ The system now provides beautiful, user-friendly responses in ASI Chat:
 > "Invest $1000 in a way to get at least 8% APY. I prefer stablecoins and low risk."
 
 ### Intent extracted by Discovery Agent (asi1-mini LLM):
+### Intent extracted by Discovery Agent (asi1-mini LLM):
 ```json
 {
   "action": "invest",
+  "action": "invest",
   "amount": 1000,
+  "min_apy": 8,
+  "max_apy": null,
+  "target_apy": null,
+  "preference": "low"
   "min_apy": 8,
   "max_apy": null,
   "target_apy": null,
@@ -367,6 +395,14 @@ The system now provides beautiful, user-friendly responses in ASI Chat:
 ```
 🎯 **INVESTMENT RECOMMENDATION** 🎯
 
+📊 **Recommended Pool:**
+
+💱 Symbol: USDC
+🏦 Protocol: Aave
+⛓️ Chain: Ethereum
+📈 APY: 8.20%
+💧 Total Value Locked: $1,200,000,000
+⚠️ Risk Assessment: 🟢 Low (Score: 82/100)
 📊 **Recommended Pool:**
 
 💱 Symbol: USDC
@@ -392,6 +428,7 @@ This pool has a LOW risk profile. ✓ Excellent liquidity with $1,200,000,000 TV
 💰 Your Investment: $1000
 🎯 Your Preference: Low
 
+✅ Great Choice: This pool has low risk and is suitable for conservative investments.
 ✅ Great Choice: This pool has low risk and is suitable for conservative investments.
 
 ---
