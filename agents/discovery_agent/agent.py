@@ -30,14 +30,24 @@ class Message(Model):
 @agent.on_message(model=Message)
 async def handle_discovery(ctx: Context, sender: str, msg: Message):
     try:
-        system_prompt = """You are an AI assistant that extracts structured investment criteria "
-        "from user input. Given a sentence, return a JSON object with the fields:\n"
-        "- action: the user's intent (e.g. 'invest')\n"
-        "- amount: numerical amount in USD\n"
-        "- min_apy: minimum desired APY (as number, not percentage string)\n"
-        "- preference: user's qualitative preferences (e.g. 'safest', 'highest yield')\n\n"
-        "If a field is not specified in the input, set its value to None.\n"
-        "Return only a valid JSON object. Do not include any explanation or extra text."""
+        system_prompt = """You are an AI assistant that extracts structured investment criteria from user input.
+
+Given a sentence, return a JSON object with these fields:
+- action: the user's intent (e.g. 'invest')
+- amount: numerical amount in USD
+- min_apy: minimum desired APY (as number, not percentage string)
+- max_apy: maximum desired APY if user specifies a target (e.g., "5% APY" means max_apy: 10 for range 0-10%)
+- target_apy: the specific APY target if user mentions one (e.g., "5% APY" means target_apy: 5)
+- preference: user's qualitative preferences (e.g. 'safest', 'highest_yield', 'balanced')
+
+APY Parsing Rules:
+- "Invest $1000 in pool with 5% APY" → target_apy: 5, max_apy: 10 (allow 2x range)
+- "Invest $1000 in safest pool" → preference: "safest", target_apy: None
+- "Invest $1000 with highest yield" → preference: "highest_yield", target_apy: None
+- "Invest $1000" → all None except amount
+
+If a field is not specified, set it to null.
+Return ONLY a valid JSON object. No explanation or extra text."""
         
         user_prompt = f"Extract criteria from this input {msg.message}"
         message_history = [
@@ -71,7 +81,7 @@ async def handle_discovery(ctx: Context, sender: str, msg: Message):
         user_intent = json.loads(json_str)
         
         # Ensure required keys are present
-        for key in ["action", "amount", "min_apy", "preference"]:
+        for key in ["action", "amount", "min_apy", "max_apy", "target_apy", "preference"]:
             user_intent.setdefault(key, None)
             
     except (json.JSONDecodeError, IndexError, AttributeError) as e:
@@ -80,6 +90,8 @@ async def handle_discovery(ctx: Context, sender: str, msg: Message):
             "action": None,
             "amount": None,
             "min_apy": None,
+            "max_apy": None,
+            "target_apy": None,
             "preference": None
         }
         

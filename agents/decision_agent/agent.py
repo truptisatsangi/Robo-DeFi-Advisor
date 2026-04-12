@@ -28,6 +28,7 @@ class RiskResponse(Model):
 class DecisionResponse(Model):
     success: bool
     optimalPool: Optional[Dict[str, Any]]
+    alternatives: Optional[List[Dict[str, Any]]]
     reasoningTrace: Optional[List[Dict[str, Any]]]
     allCandidates: Optional[List[Dict[str, Any]]]
     error: Optional[str]
@@ -47,6 +48,7 @@ async def handle_decision_request(ctx: Context, sender: str, msg: RiskResponse):
             response = DecisionResponse(
                 success=False,
                 optimalPool=None,
+                alternatives=[],
                 reasoningTrace=[],
                 allCandidates=[],
                 error=f"Risk analysis failed: {msg.error}",
@@ -70,8 +72,12 @@ async def handle_decision_request(ctx: Context, sender: str, msg: RiskResponse):
                 "symbol": original_data.get("symbol", "Unknown"),
                 "project": original_data.get("project", "Unknown"),
                 "url": original_data.get("url"),
+                "poolMeta": original_data.get("poolMeta"),
+                "underlyingTokens": original_data.get("underlyingTokens", []),
+                "rewardTokens": original_data.get("rewardTokens", []),
                 "riskScore": analysis.get("riskScore"),
                 "riskLevel": analysis.get("riskLevel"),
+                "riskReasoning": analysis.get("riskReasoning", ""),
                 "factors": analysis.get("factors", {}),
                 "confidence": analysis.get("confidence", 0),
                 "recommendations": analysis.get("recommendations", [])
@@ -88,6 +94,7 @@ async def handle_decision_request(ctx: Context, sender: str, msg: RiskResponse):
         response = DecisionResponse(
             success=result["success"],
             optimalPool=result.get("optimalPool"),
+            alternatives=result.get("alternatives"),
             reasoningTrace=result.get("reasoningTrace"),
             allCandidates=result.get("allCandidates"),
             error=result.get("error"),
@@ -106,6 +113,7 @@ async def handle_decision_request(ctx: Context, sender: str, msg: RiskResponse):
         response = DecisionResponse(
             success=False,
             optimalPool=None,
+            alternatives=[],
             reasoningTrace=[],
             allCandidates=[],
             error=str(e),

@@ -1,11 +1,25 @@
 # discovery_logic.py
 import asyncio
 import logging
+import sys
+from pathlib import Path
 from typing import Dict, List, Any, Optional
 from dataclasses import dataclass
 from datetime import datetime
 
+# Ensure project root on path for core imports (protocol registry)
+_proj_root = Path(__file__).resolve().parents[2]
+if str(_proj_root) not in sys.path:
+    sys.path.insert(0, str(_proj_root))
+
+# Ensure discovery agent dir on path for its local services package
+_agent_dir = Path(__file__).resolve().parent
+if str(_agent_dir) not in sys.path:
+    sys.path.insert(0, str(_agent_dir))
+
+from core.protocol_registry import PROTOCOL_REGISTRY, get_protocol, validate_protocols
 from services.defillama_client import DeFiLlamaClient, YieldProtocol
+from services.protocol_apy import get_secondary_apy
 
 logger = logging.getLogger(__name__)
 
@@ -21,6 +35,9 @@ class Pool:
     symbol: str
     project: str
     url: Optional[str] = None
+    poolMeta: Optional[str] = None
+    underlyingTokens: Optional[List[str]] = None
+    rewardTokens: Optional[List[str]] = None
     last_updated: Optional[datetime] = None
 
 
@@ -49,6 +66,9 @@ class DiscoveryLogic:
             symbol=pool.symbol,
             project=pool.project,
             url=pool.url,
+            poolMeta=pool.poolMeta,
+            underlyingTokens=pool.underlyingTokens,
+            rewardTokens=pool.rewardTokens,
             last_updated=datetime.utcnow()
         )
 
@@ -62,84 +82,71 @@ class DiscoveryLogic:
             return [self._convert_llama_pool(p) for p in raw_pools]
         except Exception as e:
             logger.error(f"Error fetching pools from DeFiLlama: {e}")
-            # Return mock data for testing
-            return self._get_mock_pools()
+            # Return empty list when API fails
+            return []
 
-    # TODO: add Surge + Uniswap discovery here
-    async def _discover_surge_pools(self) -> List[Pool]:
-        return []
+    # # TODO: add Surge + Uniswap discovery here
+    # async def _discover_surge_pools(self) -> List[Pool]:
+    #     return []
 
-    async def _discover_uniswap_pools(self) -> List[Pool]:
-        return []
+    # async def _discover_uniswap_pools(self) -> List[Pool]:
+    #     return []
     
-    def _get_mock_pools(self) -> List[Pool]:
-        """Return mock pool data for testing when APIs are unavailable."""
-        return [
-            Pool(
-                id="0x1234567890abcdef",
-                protocol="Uniswap V3",
-                chain="ethereum",
-                tvl=2500000.0,
-                apy=8.5,
-                symbol="ETH/USDC",
-                project="Uniswap",
-                url="https://app.uniswap.org/pools/0x1234567890abcdef",
-                last_updated=datetime.utcnow()
-            ),
-            Pool(
-                id="0xabcdef1234567890",
-                protocol="Aave V3",
-                chain="ethereum",
-                tvl=1800000.0,
-                apy=6.2,
-                symbol="USDC",
-                project="Aave",
-                url="https://app.aave.com/reserve-overview/USDC-0xa0b86a33e6c4e8b2c8b3c8b3c8b3c8b3c8b3c8b3",
-                last_updated=datetime.utcnow()
-            ),
-            Pool(
-                id="0x9876543210fedcba",
-                protocol="Compound V3",
-                chain="ethereum",
-                tvl=3200000.0,
-                apy=7.8,
-                symbol="USDT",
-                project="Compound",
-                url="https://app.compound.finance/markets/USDT",
-                last_updated=datetime.utcnow()
-            )
-        ]
 
     # ------------------------------
     # Filtering + ranking
     # ------------------------------
     def filter_pools_by_criteria(self, pools: List[Pool], criteria: Dict[str, Any]) -> List[Pool]:
-        """Filter pools according to provided criteria."""
-        filtered = []
-        min_tvl: float = criteria.get("min_tvl", 0.0) or 0
+        """Filter pools according to provided policy criteria using protocol registry metadata."""
+        # Protocol allowlist: from registry if policy specifies allowed_protocols, else default trusted registry entries
+        allowed_protocols_raw: List[str] = criteria.get("allowed_protocols") or []
+        if allowed_protocols_raw:
+            valid_names, invalid_names = validate_protocols(allowed_protocols_raw)
+            if invalid_names:
+                logger.warning("Unknown protocols in policy (excluded): %s", invalid_names)
+            # Set of registry keys that are allowed (canonical + aliases e.g. aave-v3 -> aave)
+            allowed_protocol_set = set(valid_names) | {
+                k for k, v in PROTOCOL_REGISTRY.items()
+                if v.name in valid_names
+            }
+        else:
+            allowed_protocol_set = {
+                key for key, entry in PROTOCOL_REGISTRY.items() if key == entry.name
+            }
+
+        allowed_chains: List[str] = [c.strip().lower() for c in (criteria.get("allowed_chains") or []) if c]
+        min_tvl: float = float(criteria.get("min_pool_tvl_usd") or criteria.get("min_tvl") or 0)
         min_apy: float = criteria.get("min_apy", 0.0) or 0
+        max_apy = criteria.get("max_apy")
         preference = criteria.get("preference", "medium")
 
+        filtered = []
         for p in pools:
             if p.tvl is None or p.apy is None:
                 continue
+
+            protocol_lower = p.protocol.lower()
+            proto_valid, _ = validate_protocols([protocol_lower])
+            if not proto_valid:
+                continue
+            canonical_protocol = proto_valid[0]
+            if canonical_protocol not in allowed_protocol_set:
+                continue
+
+            chain_normalized = (p.chain or "").strip().lower()
+            if allowed_chains and chain_normalized not in allowed_chains:
+                continue
+
+            protocol_entry = get_protocol(canonical_protocol)
+            supported_chains = {c.strip().lower() for c in protocol_entry.supported_chains}
+            if chain_normalized not in supported_chains:
+                continue
             if p.tvl < min_tvl or p.apy < min_apy:
                 continue
-                
-            # Additional filtering for safest preference
-            if preference == "safest":
-                # Only include well-known, established protocols for safest
-                safe_protocols = [
-                    "uniswap", "aave", "compound", "makerdao", "lido", 
-                    "curve", "balancer", "yearn", "convex", "frax"
-                ]
-                if not any(safe in p.protocol.lower() for safe in safe_protocols):
-                    continue
-                    
-                # Require higher TVL for safest pools
-                if p.tvl < 10000000:  # $10M minimum for safest
-                    continue
-
+            if max_apy is not None and p.apy > max_apy:
+                continue
+            if preference == "safest" and p.tvl < 10_000_000:
+                continue
             filtered.append(p)
 
         return filtered
@@ -149,30 +156,37 @@ class DiscoveryLogic:
         preference = criteria.get("preference", "medium")
         
         if preference == "safest":
-            # For safest, prioritize established protocols with good TVL over high APY
-            def safety_score(pool):
-                # Base score from TVL (higher TVL = safer)
-                tvl_score = min(100, (pool.tvl / 1000000000) * 50)  # Max 50 points for $1B+ TVL
-                
-                # Protocol safety bonus
-                protocol_bonus = 0
-                if "uniswap" in pool.protocol.lower():
-                    protocol_bonus = 30
-                elif "aave" in pool.protocol.lower():
-                    protocol_bonus = 25
-                elif "compound" in pool.protocol.lower():
-                    protocol_bonus = 25
-                elif "lido" in pool.protocol.lower():
-                    protocol_bonus = 20
-                elif "curve" in pool.protocol.lower():
-                    protocol_bonus = 20
-                
-                # APY bonus (but less important for safety)
-                apy_bonus = min(20, pool.apy * 2)  # Max 20 points for 10%+ APY
-                
-                return tvl_score + protocol_bonus + apy_bonus
             
-            return sorted(pools, key=safety_score, reverse=True)[:top_n]
+            def calculate_safety_score(pool: Pool) -> float:
+                """Calculate a composite safety score (0-100)."""
+                score = 0
+                
+                # TVL weight (40 points)
+                if pool.tvl > 100_000_000: score += 40
+                elif pool.tvl > 50_000_000: score += 30
+                elif pool.tvl > 10_000_000: score += 20
+                elif pool.tvl > 1_000_000: score += 10
+                else: score += 5
+                
+                # Protocol reputation weight (30 points) - using available data
+                safe_protocols = ["uniswap", "aave", "compound", "makerdao", "lido", "curve", "balancer", "yearn", "convex", "frax"]
+                protocol_lower = pool.protocol.lower()
+                if any(safe in protocol_lower for safe in safe_protocols):
+                    score += 30
+                elif "v3" in protocol_lower or "v2" in protocol_lower:
+                    score += 20  # Versioned protocols are generally more mature
+                else:
+                    score += 10  # Default for unknown protocols
+                
+                # APY stability weight (30 points) - using APY as proxy for stability
+                if pool.apy < 5: score += 30  # Very stable, low APY
+                elif pool.apy < 10: score += 20  # Moderate APY
+                elif pool.apy < 20: score += 10  # Higher APY, more risk
+                else: score += 5  # Very high APY, high risk
+                
+                return score
+                            
+            return sorted(pools, key=calculate_safety_score, reverse=True)[:top_n]
         else:
             # For other preferences, rank by APY
             return sorted(pools, key=lambda p: p.apy, reverse=True)[:top_n]
@@ -180,27 +194,84 @@ class DiscoveryLogic:
     # ------------------------------
     # Orchestration
     # ------------------------------
-    async def discover_pools(self, criteria: Dict[str, Any]) -> Dict[str, Any]:
-        """Main entry point for pool discovery."""
-        return await self.discover_pools_async(criteria)
-    
-    async def discover_pools_async(self, criteria: Dict[str, Any]) -> List[Dict[str, Any]]:
-        """Main entry point for pool discovery."""
+   
+    async def _discover_pools_with_stats(self, criteria: Dict[str, Any]) -> Dict[str, Any]:
+        """Main discovery pipeline that returns pools and stage counts."""
         logger.info("🚀 Running discovery with criteria %s", criteria)
+        stats: Dict[str, int] = {
+            "total_fetched": 0,
+            "after_policy_filters": 0,
+            "after_rank_top_n": 0,
+            "after_apy_crosscheck": 0,
+        }
 
         # Gather pools from all sources
-        llama_pools, surge_pools, uni_pools = await asyncio.gather(
+        llama_pools = await asyncio.gather(
             self._discover_llama_pools(),
-            self._discover_surge_pools(),
-            self._discover_uniswap_pools(),
+            # self._discover_surge_pools(),
+            # self._discover_uniswap_pools(),
         )
 
-        all_pools = llama_pools + surge_pools + uni_pools
+        # Flatten the results since asyncio.gather returns a list of results
+        all_pools = []
+        for pool_list in llama_pools:
+            if pool_list:  # Check if the list is not empty
+                all_pools.extend(pool_list)
+        stats["total_fetched"] = len(all_pools)
+        
+        if not all_pools:
+            logger.warning("⚠️ No pools found from any source")
+            return {"pools": [], "stats": stats}
+
         logger.info(f"✅ Found {len(all_pools)} total pools")
 
-        # Filter + rank
+        # Filter + rank FIRST (fast, local) to reduce the set before expensive API calls
         filtered = self.filter_pools_by_criteria(all_pools, criteria)
-        ranked = self.rank_pools(filtered, criteria, top_n=criteria.get("top_n", 5))
+        stats["after_policy_filters"] = len(filtered)
+        if not filtered:
+            logger.warning("⚠️ No pools match the specified criteria")
+            return {"pools": [], "stats": stats}
 
-        # Return just the list of pool dictionaries for the agent
-        return [p.__dict__ for p in ranked]
+        ranked = self.rank_pools(filtered, criteria, top_n=criteria.get("top_n", 10))
+        stats["after_rank_top_n"] = len(ranked)
+        logger.info(f"📊 {len(ranked)} pools after filter + rank (from {len(all_pools)} total)")
+
+        # Cross-check APY across sources. Single-source APY is a trust assumption
+        # that is inappropriate for a treasury product. See:
+        # https://defillama.com/docs/api for primary source.
+        # Protocol subgraphs (e.g. Aave, Compound) are the secondary source.
+        # Runs only on the small ranked set (not all 19k pools).
+        # All cross-checks run concurrently to avoid sequential latency.
+        async def _check_pool_apy(pool: Pool) -> Optional[Pool]:
+            secondary_apy = await get_secondary_apy(pool.protocol, pool.chain, pool.symbol)
+            if secondary_apy is not None:
+                denom = max(pool.apy, secondary_apy, 0.01)
+                deviation = abs(pool.apy - secondary_apy) / denom
+                if deviation > 0.20:
+                    logger.warning(
+                        "APY deviation >20%% between DeFiLlama and protocol source for pool %s. "
+                        "Excluding from recommendations.",
+                        pool.id,
+                    )
+                    return None
+            return pool
+
+        crosscheck_results = await asyncio.gather(*[_check_pool_apy(p) for p in ranked])
+        verified: List[Pool] = [p for p in crosscheck_results if p is not None]
+
+        if not verified:
+            logger.warning("⚠️ All ranked pools failed APY cross-check")
+            return {"pools": [], "stats": stats}
+
+        stats["after_apy_crosscheck"] = len(verified)
+        logger.info("#### Discovery output #### %s", [p.__dict__ for p in verified])
+        return {"pools": [p.__dict__ for p in verified], "stats": stats}
+
+    async def discover_pools_async(self, criteria: Dict[str, Any]) -> List[Dict[str, Any]]:
+        """Backwards-compatible pool discovery API returning only pools."""
+        result = await self._discover_pools_with_stats(criteria)
+        return result["pools"]
+
+    async def discover_pools_with_stats(self, criteria: Dict[str, Any]) -> Dict[str, Any]:
+        """Discovery API returning pools plus stage telemetry."""
+        return await self._discover_pools_with_stats(criteria)

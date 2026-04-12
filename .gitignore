@@ -1,3 +1,4 @@
 __pycache__
 .env
 private_keys.json
+node_modules
