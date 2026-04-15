@@ -22,7 +22,7 @@ from core.audit import (
     get_recommendation_by_run_id,
     read_recommendation_entries,
 )
-from core.mandate import MandateNotFoundError, get_mandate, list_mandates
+from core.mandate import MandateNotFoundError, get_mandate, list_mandates, save_mandate
 
 app = FastAPI(
     title="RDA Treasury API",
@@ -51,9 +51,62 @@ class RunRecommendationRequest(BaseModel):
     amount_usd: Optional[float] = Field(None, ge=0, description="Optional amount override")
 
 
+class CreateMandateRequest(BaseModel):
+    mandate_id: str = Field(..., description="Unique mandate identifier")
+    dao_id: str = Field(..., description="DAO identifier")
+    dao_name: Optional[str] = Field(None, description="Human-readable DAO name")
+    approval_ref: Optional[str] = Field(None, description="Governance vote reference")
+    valid_until: Optional[str] = Field(None, description="Expiry date YYYY-MM-DD")
+    amount_usd: float = Field(100000.0, ge=0, description="Capital to allocate in USD")
+    min_apy: float = Field(1.0, ge=0, description="Minimum APY (%)")
+    max_apy: Optional[float] = Field(None, ge=0, description="Maximum APY (%) — leave blank for no ceiling")
+    risk_max_level: str = Field("medium", description="Max risk level: very_low, low, medium, high, very_high")
+    risk_min_score: Optional[int] = Field(30, ge=0, le=100, description="Min risk score 0-100 (higher = safer)")
+    allowed_protocols: Optional[str] = Field(None, description="Comma-separated protocols e.g. aave,compound,curve")
+    allowed_chains: Optional[str] = Field(None, description="Comma-separated chains e.g. ethereum,arbitrum")
+    min_pool_tvl_usd: float = Field(1000000.0, ge=0, description="Minimum pool TVL in USD")
+    max_tvl_per_pool_pct: float = Field(40.0, ge=1, le=100, description="Max % of capital in one pool")
+    preference: str = Field("balanced", description="safest, balanced, or highest_yield")
+
+
 @app.get("/health")
 def health() -> Dict[str, str]:
     return {"status": "ok"}
+
+
+@app.post("/api/mandates")
+def create_mandate(payload: CreateMandateRequest) -> Dict[str, Any]:
+    from datetime import date, timedelta
+    valid_until = payload.valid_until
+    if not valid_until:
+        valid_until = (date.today() + timedelta(days=30)).isoformat()
+    protocols = [p.strip() for p in payload.allowed_protocols.split(",")] if payload.allowed_protocols else ["aave", "compound", "curve", "uniswap", "balancer"]
+    chains = [c.strip() for c in payload.allowed_chains.split(",")] if payload.allowed_chains else ["ethereum", "arbitrum", "polygon", "optimism", "base"]
+    mandate = {
+        "mandate_id": payload.mandate_id,
+        "mandate_version": 1,
+        "dao_id": payload.dao_id,
+        "dao_name": payload.dao_name or payload.dao_id,
+        "approval_ref": payload.approval_ref or f"manual-{payload.mandate_id}",
+        "valid_from": date.today().isoformat(),
+        "valid_until": valid_until,
+        "policy": {
+            "amount_usd": payload.amount_usd,
+            "min_apy": payload.min_apy,
+            "max_apy": payload.max_apy,
+            "risk": {
+                "max_level": payload.risk_max_level,
+                "min_score": payload.risk_min_score,
+            },
+            "allowed_protocols": protocols,
+            "allowed_chains": chains,
+            "min_pool_tvl_usd": payload.min_pool_tvl_usd,
+            "max_tvl_per_pool_pct": payload.max_tvl_per_pool_pct,
+            "preference": payload.preference,
+        },
+    }
+    save_mandate(payload.dao_id, payload.mandate_id, mandate)
+    return {"success": True, "mandate": mandate}
 
 
 @app.post("/api/recommendations/run")

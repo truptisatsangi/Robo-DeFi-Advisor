@@ -4,20 +4,18 @@
   "dao_id": "test-dao",
   "dao_name": "Test DAO",
   "policy": {
-    "min_apy": 2.0,
+    "min_apy": 1.0,
     "max_apy": null,
-    "target_apy": 5.0,
     "risk": {
-      "max_level": "medium",
-      "min_score": 40
+      "max_level": "high",
+      "min_score": 20
     },
-    "allowed_protocols": ["aave", "compound"],
-    "allowed_chains": ["ethereum", "arbitrum"],
+    "allowed_protocols": ["aave", "compound", "curve", "uniswap", "balancer", "pendle"],
+    "allowed_chains": ["ethereum", "arbitrum", "polygon", "optimism", "base"],
     "max_tvl_per_pool_pct": 40.0,
     "min_pool_tvl_usd": 1000000,
     "amount_usd": 100000,
-    "preference": "balanced",
-    "mandate_version": 1
+    "preference": "balanced"
   },
   "approval_ref": "Snapshot proposal #TEST-001",
   "valid_from": "2025-01-01",
