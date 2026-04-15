@@ -152,44 +152,73 @@ class DiscoveryLogic:
         return filtered
 
     def rank_pools(self, pools: List[Pool], criteria: Dict[str, Any], top_n: int = 5) -> List[Pool]:
-        """Rank pools based on criteria."""
-        preference = criteria.get("preference", "medium")
-        
+        """Rank pools based on criteria.
+
+        Preference strategies:
+          safest        — composite safety score weighted toward TVL + protocol tier + low APY
+          highest_yield — pure APY descending; risk is handled post-discovery by risk policy filters
+          balanced      — composite of APY (50%) + TVL (35%) + protocol tier (15%); balances
+                          yield against liquidity depth and protocol trustworthiness
+        """
+        preference = (criteria.get("preference") or "balanced").lower()
+
         if preference == "safest":
-            
             def calculate_safety_score(pool: Pool) -> float:
-                """Calculate a composite safety score (0-100)."""
                 score = 0
-                
-                # TVL weight (40 points)
                 if pool.tvl > 100_000_000: score += 40
                 elif pool.tvl > 50_000_000: score += 30
                 elif pool.tvl > 10_000_000: score += 20
                 elif pool.tvl > 1_000_000: score += 10
                 else: score += 5
-                
-                # Protocol reputation weight (30 points) - using available data
+
                 safe_protocols = ["uniswap", "aave", "compound", "makerdao", "lido", "curve", "balancer", "yearn", "convex", "frax"]
                 protocol_lower = pool.protocol.lower()
                 if any(safe in protocol_lower for safe in safe_protocols):
                     score += 30
                 elif "v3" in protocol_lower or "v2" in protocol_lower:
-                    score += 20  # Versioned protocols are generally more mature
+                    score += 20
                 else:
-                    score += 10  # Default for unknown protocols
-                
-                # APY stability weight (30 points) - using APY as proxy for stability
-                if pool.apy < 5: score += 30  # Very stable, low APY
-                elif pool.apy < 10: score += 20  # Moderate APY
-                elif pool.apy < 20: score += 10  # Higher APY, more risk
-                else: score += 5  # Very high APY, high risk
-                
+                    score += 10
+
+                if pool.apy < 5: score += 30
+                elif pool.apy < 10: score += 20
+                elif pool.apy < 20: score += 10
+                else: score += 5
+
                 return score
-                            
+
             return sorted(pools, key=calculate_safety_score, reverse=True)[:top_n]
-        else:
-            # For other preferences, rank by APY
+
+        elif preference == "highest_yield":
+            # Pure APY descending; risk constraints filter out unsafe pools in the risk stage.
             return sorted(pools, key=lambda p: p.apy, reverse=True)[:top_n]
+
+        else:
+            # balanced (default): composite of APY, TVL depth, and protocol tier.
+            # This produces a different candidate set than highest_yield — a pool with
+            # slightly lower APY but 10× the TVL can outscore a higher-APY shallow pool.
+            if not pools:
+                return pools
+            apys = [p.apy for p in pools]
+            tvls = [p.tvl for p in pools]
+            apy_lo, apy_hi = min(apys), max(apys)
+            tvl_lo, tvl_hi = min(tvls), max(tvls)
+            _tier1 = {"uniswap", "aave", "compound", "curve"}
+            _tier2 = {"balancer", "pendle", "yearn", "lido"}
+
+            def _balanced_score(p: Pool) -> float:
+                n_apy = (p.apy - apy_lo) / (apy_hi - apy_lo) if apy_hi > apy_lo else 0.5
+                n_tvl = (p.tvl - tvl_lo) / (tvl_hi - tvl_lo) if tvl_hi > tvl_lo else 0.5
+                proto = p.protocol.lower()
+                if any(t in proto for t in _tier1):
+                    n_proto = 1.0
+                elif any(t in proto for t in _tier2):
+                    n_proto = 0.7
+                else:
+                    n_proto = 0.3
+                return 0.50 * n_apy + 0.35 * n_tvl + 0.15 * n_proto
+
+            return sorted(pools, key=_balanced_score, reverse=True)[:top_n]
 
     # ------------------------------
     # Orchestration

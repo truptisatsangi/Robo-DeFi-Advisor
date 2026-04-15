@@ -5700,3 +5700,1496 @@ Generated At (Local): 15 Apr 2026, 23:09 IST
 }
 ----- End Entry -----
 
+===== Treasury Recommendation Entry | UTC: 15 Apr 2026, 17:59 UTC | Local: 15 Apr 2026, 23:29 IST =====
+Mandate: test-mandate-003
+Run ID: fb908ad1-af1a-4d0f-807f-70586a753480
+Generated At (UTC): 15 Apr 2026, 17:59 UTC
+Generated At (Local): 15 Apr 2026, 23:29 IST
+{
+  "run_id": "fb908ad1-af1a-4d0f-807f-70586a753480",
+  "mandate_id": "test-mandate-003",
+  "policy_snapshot": {
+    "amount_usd": 500000.0,
+    "min_apy": 2.0,
+    "max_apy": null,
+    "risk": {
+      "max_level": "medium",
+      "min_score": 30
+    },
+    "allowed_protocols": [
+      "aave",
+      "compound",
+      "curve",
+      "uniswap",
+      "balancer",
+      "pendle"
+    ],
+    "allowed_chains": [
+      "ethereum",
+      "arbitrum",
+      "polygon",
+      "optimism",
+      "base"
+    ],
+    "min_pool_tvl_usd": 1000000.0,
+    "max_tvl_per_pool_pct": 40.0,
+    "preference": "highest_yield"
+  },
+  "recommendation_output": {
+    "recommendation": {
+      "recommended_pools": [
+        {
+          "id": "b99bcdf5-1350-4269-981e-0e9b5cccb007",
+          "protocol": "uniswap-v3",
+          "chain": "Base",
+          "tvl": 109878883,
+          "apy": 57.86458,
+          "symbol": "WETH-USDC",
+          "project": "uniswap-v3",
+          "url": null,
+          "poolMeta": "0.3%",
+          "underlyingTokens": [
+            "0x4200000000000000000000000000000000000006",
+            "0x833589fcd6edb6e08f4c7c32d4f71b54bda02913"
+          ],
+          "rewardTokens": null,
+          "last_updated": "2026-04-15 17:59:20.612516",
+          "riskData": {
+            "poolId": "b99bcdf5-1350-4269-981e-0e9b5cccb007",
+            "riskScore": 80.0,
+            "riskLevel": "very_low",
+            "riskReasoning": "This pool has a VERY LOW risk profile. \u2713 Excellent liquidity with $109,878,883 TVL provides strong stability and low slippage risk. \u2713 Uniswap-V3 is an established protocol with strong track record and audits. \u26a0 Very high APY (57.9%) - check for impermanent loss risks and reward token volatility. \u2713 No known exploit history.",
+            "factors": {
+              "contractVerified": null,
+              "auditLink": null,
+              "holderConcentration": null,
+              "liquidityScore": null,
+              "exploitHistory": null,
+              "existingRisk": null
+            },
+            "confidence": 0.0,
+            "recommendations": [
+              "\u2705 Low risk pool - suitable for conservative investments",
+              "\ud83d\udcc8 Good choice for long-term holdings",
+              "\ud83d\udca7 High liquidity - excellent for large transactions",
+              "\ud83d\udcca Very high APY - verify sustainability and potential IL risks"
+            ],
+            "originalPoolData": {
+              "id": "b99bcdf5-1350-4269-981e-0e9b5cccb007",
+              "protocol": "uniswap-v3",
+              "chain": "Base",
+              "tvl": 109878883,
+              "apy": 57.86458,
+              "symbol": "WETH-USDC",
+              "project": "uniswap-v3",
+              "url": null,
+              "poolMeta": "0.3%",
+              "underlyingTokens": [
+                "0x4200000000000000000000000000000000000006",
+                "0x833589fcd6edb6e08f4c7c32d4f71b54bda02913"
+              ],
+              "rewardTokens": null,
+              "last_updated": "2026-04-15 17:59:20.612516"
+            }
+          },
+          "totalScore": 0.6029,
+          "scoreFactors": {
+            "normalized_apy": 0.20589139629174202,
+            "normalized_risk_score": 1.0,
+            "normalized_tvl": 1.0,
+            "weights": {
+              "apy": 0.5,
+              "risk": 0.3,
+              "tvl": 0.2
+            }
+          },
+          "ranking": 1,
+          "explanation": [
+            "APY above policy threshold",
+            "Risk score within mandate limits",
+            "Protocol whitelisted in policy",
+            "Pool TVL above minimum threshold"
+          ],
+          "selection_reason": "APY above policy threshold. Risk score within mandate limits. Protocol whitelisted in policy. Pool TVL above minimum threshold"
+        },
+        {
+          "id": "7e218bc2-186c-473d-af0c-415bcdfe392b",
+          "protocol": "curve-dex",
+          "chain": "Ethereum",
+          "tvl": 1616565,
+          "apy": 122.69,
+          "symbol": "IDAI-IUSDC-IUSDT",
+          "project": "curve-dex",
+          "url": null,
+          "poolMeta": null,
+          "underlyingTokens": [
+            "0x8e595470Ed749b85C6F7669de83EAe304C2ec68F",
+            "0x76Eb2FE28b36B3ee97F3Adae0C69606eeDB2A37c",
+            "0x48759F220ED983dB51fA7A8C0D2AAb8f3ce4166a"
+          ],
+          "rewardTokens": null,
+          "last_updated": "2026-04-15 17:59:20.615726",
+          "riskData": {
+            "poolId": "7e218bc2-186c-473d-af0c-415bcdfe392b",
+            "riskScore": 60.0,
+            "riskLevel": "low",
+            "riskReasoning": "This pool has a LOW risk profile. \u26a0 Moderate liquidity at $1,616,565 TVL - some slippage risk on large trades. \u2713 Curve-Dex is an established protocol with strong track record and audits. \u26a0 Extremely high APY (122.7%) suggests high risk or temporary incentives - verify sustainability. \u2713 No known exploit history.",
+            "factors": {
+              "contractVerified": null,
+              "auditLink": null,
+              "holderConcentration": null,
+              "liquidityScore": null,
+              "exploitHistory": null,
+              "existingRisk": null
+            },
+            "confidence": 0.0,
+            "recommendations": [
+              "\u2696\ufe0f Medium risk - suitable for balanced portfolios",
+              "\ud83d\udcca Very high APY - verify sustainability and potential IL risks",
+              "\ud83c\udfe6 Established protocol with strong track record"
+            ],
+            "originalPoolData": {
+              "id": "7e218bc2-186c-473d-af0c-415bcdfe392b",
+              "protocol": "curve-dex",
+              "chain": "Ethereum",
+              "tvl": 1616565,
+              "apy": 122.69,
+              "symbol": "IDAI-IUSDC-IUSDT",
+              "project": "curve-dex",
+              "url": null,
+              "poolMeta": null,
+              "underlyingTokens": [
+                "0x8e595470Ed749b85C6F7669de83EAe304C2ec68F",
+                "0x76Eb2FE28b36B3ee97F3Adae0C69606eeDB2A37c",
+                "0x48759F220ED983dB51fA7A8C0D2AAb8f3ce4166a"
+              ],
+              "rewardTokens": null,
+              "last_updated": "2026-04-15 17:59:20.615726"
+            }
+          },
+          "totalScore": 0.501,
+          "scoreFactors": {
+            "normalized_apy": 1.0,
+            "normalized_risk_score": 0.0,
+            "normalized_tvl": 0.005245796470168327,
+            "weights": {
+              "apy": 0.5,
+              "risk": 0.3,
+              "tvl": 0.2
+            }
+          },
+          "ranking": 2,
+          "explanation": [
+            "APY above policy threshold",
+            "Risk score within mandate limits",
+            "Protocol whitelisted in policy",
+            "Pool TVL above minimum threshold"
+          ],
+          "selection_reason": "APY above policy threshold. Risk score within mandate limits. Protocol whitelisted in policy. Pool TVL above minimum threshold"
+        },
+        {
+          "id": "3e9da80c-274d-4f55-8421-7439d4ef429d",
+          "protocol": "uniswap-v3",
+          "chain": "Arbitrum",
+          "tvl": 1944025,
+          "apy": 80.23697,
+          "symbol": "WETH-ARB",
+          "project": "uniswap-v3",
+          "url": null,
+          "poolMeta": "0.05%",
+          "underlyingTokens": [
+            "0x82af49447d8a07e3bd95bd0d56f35241523fbab1",
+            "0x912ce59144191c1204e64559fe8253a0e49e6548"
+          ],
+          "rewardTokens": null,
+          "last_updated": "2026-04-15 17:59:20.615152",
+          "riskData": {
+            "poolId": "3e9da80c-274d-4f55-8421-7439d4ef429d",
+            "riskScore": 60.0,
+            "riskLevel": "low",
+            "riskReasoning": "This pool has a LOW risk profile. \u26a0 Moderate liquidity at $1,944,025 TVL - some slippage risk on large trades. \u2713 Uniswap-V3 is an established protocol with strong track record and audits. \u26a0 Very high APY (80.2%) - check for impermanent loss risks and reward token volatility. \u2713 No known exploit history.",
+            "factors": {
+              "contractVerified": null,
+              "auditLink": null,
+              "holderConcentration": null,
+              "liquidityScore": null,
+              "exploitHistory": null,
+              "existingRisk": null
+            },
+            "confidence": 0.0,
+            "recommendations": [
+              "\u2696\ufe0f Medium risk - suitable for balanced portfolios",
+              "\ud83d\udcca Very high APY - verify sustainability and potential IL risks",
+              "\ud83c\udfe6 Established protocol with strong track record"
+            ],
+            "originalPoolData": {
+              "id": "3e9da80c-274d-4f55-8421-7439d4ef429d",
+              "protocol": "uniswap-v3",
+              "chain": "Arbitrum",
+              "tvl": 1944025,
+              "apy": 80.23697,
+              "symbol": "WETH-ARB",
+              "project": "uniswap-v3",
+              "url": null,
+              "poolMeta": "0.05%",
+              "underlyingTokens": [
+                "0x82af49447d8a07e3bd95bd0d56f35241523fbab1",
+                "0x912ce59144191c1204e64559fe8253a0e49e6548"
+              ],
+              "rewardTokens": null,
+              "last_updated": "2026-04-15 17:59:20.615152"
+            }
+          },
+          "totalScore": 0.2416,
+          "scoreFactors": {
+            "normalized_apy": 0.47995221046798026,
+            "normalized_risk_score": 0.0,
+            "normalized_tvl": 0.008254620015659738,
+            "weights": {
+              "apy": 0.5,
+              "risk": 0.3,
+              "tvl": 0.2
+            }
+          },
+          "ranking": 3,
+          "explanation": [
+            "APY above policy threshold",
+            "Risk score within mandate limits",
+            "Protocol whitelisted in policy",
+            "Pool TVL above minimum threshold"
+          ],
+          "selection_reason": "APY above policy threshold. Risk score within mandate limits. Protocol whitelisted in policy. Pool TVL above minimum threshold"
+        }
+      ],
+      "allocation": [
+        {
+          "pool_id": "b99bcdf5-1350-4269-981e-0e9b5cccb007",
+          "protocol": "uniswap-v3",
+          "chain": "Base",
+          "apy": 57.86458,
+          "risk_score": 80.0,
+          "risk_level": "very_low",
+          "tvl": 109878883,
+          "score": 0.6029,
+          "pct": 33.4,
+          "amount_usd": 166869.64,
+          "url": "",
+          "explanation": [
+            "APY above policy threshold",
+            "Risk score within mandate limits",
+            "Protocol whitelisted in policy",
+            "Pool TVL above minimum threshold"
+          ]
+        },
+        {
+          "pool_id": "7e218bc2-186c-473d-af0c-415bcdfe392b",
+          "protocol": "curve-dex",
+          "chain": "Ethereum",
+          "apy": 122.69,
+          "risk_score": 60.0,
+          "risk_level": "low",
+          "tvl": 1616565,
+          "score": 0.501,
+          "pct": 27.7,
+          "amount_usd": 138665.93,
+          "url": "",
+          "explanation": [
+            "APY above policy threshold",
+            "Risk score within mandate limits",
+            "Protocol whitelisted in policy",
+            "Pool TVL above minimum threshold"
+          ]
+        },
+        {
+          "pool_id": "3e9da80c-274d-4f55-8421-7439d4ef429d",
+          "protocol": "uniswap-v3",
+          "chain": "Arbitrum",
+          "apy": 80.23697,
+          "risk_score": 60.0,
+          "risk_level": "low",
+          "tvl": 1944025,
+          "score": 0.2416,
+          "pct": 13.4,
+          "amount_usd": 66869.64,
+          "url": "",
+          "explanation": [
+            "APY above policy threshold",
+            "Risk score within mandate limits",
+            "Protocol whitelisted in policy",
+            "Pool TVL above minimum threshold"
+          ]
+        },
+        {
+          "pool_id": "e9440a04-578f-43b8-8c53-c44c1187183d",
+          "protocol": "uniswap-v3",
+          "chain": "Ethereum",
+          "apy": 79.66444,
+          "risk_score": 60.0,
+          "risk_level": "low",
+          "tvl": 2432982,
+          "score": 0.239,
+          "pct": 13.2,
+          "amount_usd": 66150.01,
+          "url": "",
+          "explanation": [
+            "APY above policy threshold",
+            "Risk score within mandate limits",
+            "Protocol whitelisted in policy",
+            "Pool TVL above minimum threshold"
+          ]
+        },
+        {
+          "pool_id": "46528137-34ed-4b6e-8777-1da83c5092cf",
+          "protocol": "uniswap-v3",
+          "chain": "Ethereum",
+          "apy": 77.29785,
+          "risk_score": 60.0,
+          "risk_level": "low",
+          "tvl": 1045648,
+          "score": 0.222,
+          "pct": 12.3,
+          "amount_usd": 61444.78,
+          "url": "",
+          "explanation": [
+            "APY above policy threshold",
+            "Risk score within mandate limits",
+            "Protocol whitelisted in policy",
+            "Pool TVL above minimum threshold"
+          ]
+        }
+      ],
+      "expected_portfolio_apy": 84.11,
+      "total_allocated_usd": 500000.0,
+      "reasoning_trace": [
+        {
+          "step": 1,
+          "agent": "DecisionAgent",
+          "action": "filter_pools",
+          "input": {
+            "totalPools": 10,
+            "criteria": {
+              "min_apy": 2.0,
+              "max_apy": null,
+              "target_apy": null,
+              "preference": "highest_yield",
+              "min_pool_tvl_usd": 1000000.0,
+              "amount_usd": 500000.0,
+              "top_n": 10,
+              "risk": {
+                "max_level": "medium",
+                "min_score": 30
+              },
+              "allowed_protocols": [
+                "aave",
+                "compound",
+                "curve",
+                "uniswap",
+                "balancer",
+                "pendle"
+              ],
+              "allowed_chains": [
+                "ethereum",
+                "arbitrum",
+                "polygon",
+                "optimism",
+                "base"
+              ],
+              "max_tvl_per_pool_pct": 40.0
+            }
+          },
+          "output": {
+            "filteredPools": 10,
+            "filtersApplied": [
+              "min_apy",
+              "max_apy",
+              "target_apy",
+              "preference",
+              "min_pool_tvl_usd",
+              "amount_usd",
+              "top_n",
+              "risk",
+              "allowed_protocols",
+              "allowed_chains",
+              "max_tvl_per_pool_pct"
+            ]
+          },
+          "reasoning": "Filtered pools based on criteria: min_apy, max_apy, target_apy, preference, min_pool_tvl_usd, amount_usd, top_n, risk, allowed_protocols, allowed_chains, max_tvl_per_pool_pct",
+          "timestamp": "2026-04-15T23:29:21.872026"
+        },
+        {
+          "step": 2,
+          "agent": "DecisionAgent",
+          "action": "score_pools",
+          "input": {
+            "poolsToScore": 10
+          },
+          "output": {
+            "scoringFactors": [
+              "normalized_apy",
+              "normalized_risk_score",
+              "normalized_tvl",
+              "weights"
+            ],
+            "topScores": [
+              {
+                "id": "b99bcdf5-1350-4269-981e-0e9b5cccb007",
+                "score": 0.6029
+              },
+              {
+                "id": "7e218bc2-186c-473d-af0c-415bcdfe392b",
+                "score": 0.501
+              },
+              {
+                "id": "3e9da80c-274d-4f55-8421-7439d4ef429d",
+                "score": 0.2416
+              }
+            ]
+          },
+          "reasoning": "Scored pools using deterministic formula: score = 0.5*norm_apy + 0.3*norm_risk + 0.2*norm_tvl (each normalized to [0,1])",
+          "timestamp": "2026-04-15T23:29:21.872034"
+        },
+        {
+          "step": 3,
+          "agent": "DecisionAgent",
+          "action": "select_optimal",
+          "input": {
+            "candidatePools": 10
+          },
+          "output": {
+            "selectedPool": {
+              "id": "b99bcdf5-1350-4269-981e-0e9b5cccb007",
+              "protocol": "uniswap-v3",
+              "score": 0.6029,
+              "apy": 57.86458,
+              "riskScore": 50
+            }
+          },
+          "reasoning": "Selected b99bcdf5-1350-4269-981e-0e9b5cccb007 with highest composite score (0.6029)",
+          "timestamp": "2026-04-15T23:29:21.872037"
+        },
+        {
+          "step": 4,
+          "agent": "DecisionAgent",
+          "action": "justify_selection",
+          "input": {
+            "selectedPool": "b99bcdf5-1350-4269-981e-0e9b5cccb007"
+          },
+          "output": {
+            "justification": {
+              "apyAdvantage": 57.86458,
+              "riskAssessment": "medium",
+              "liquidityStrength": 109878883,
+              "protocolReliability": "uniswap-v3"
+            }
+          },
+          "reasoning": "Pool selected due to 57.86458% APY, medium risk, and strong liquidity of $109,878,883",
+          "timestamp": "2026-04-15T23:29:21.872041"
+        }
+      ]
+    },
+    "proposal_draft": "## Treasury Allocation Proposal\n\nAllocate **$500,000** from treasury across **5 pools**.\n\n### Portfolio summary\n- **Total allocated:** $500,000\n- **Expected portfolio APY:** 84.11%\n- **Number of pools:** 5\n\n### Allocation breakdown\n\n| Pool / Protocol | Chain | Allocation | Amount | APY | Risk | Verify |\n| --- | --- | --- | --- | --- | --- | --- |\n| uniswap-v3 | Base | 33.4% | $166,870 | 57.86% | 80.0/100 | [DeFiLlama \u2197](https://defillama.com/yields/pool/b99bcdf5-1350-4269-981e-0e9b5cccb007) |\n| curve-dex | Ethereum | 27.7% | $138,666 | 122.69% | 60.0/100 | [DeFiLlama \u2197](https://defillama.com/yields/pool/7e218bc2-186c-473d-af0c-415bcdfe392b) |\n| uniswap-v3 | Arbitrum | 13.4% | $66,870 | 80.24% | 60.0/100 | [DeFiLlama \u2197](https://defillama.com/yields/pool/3e9da80c-274d-4f55-8421-7439d4ef429d) |\n| uniswap-v3 | Ethereum | 13.2% | $66,150 | 79.66% | 60.0/100 | [DeFiLlama \u2197](https://defillama.com/yields/pool/e9440a04-578f-43b8-8c53-c44c1187183d) |\n| uniswap-v3 | Ethereum | 12.3% | $61,445 | 77.3% | 60.0/100 | [DeFiLlama \u2197](https://defillama.com/yields/pool/46528137-34ed-4b6e-8777-1da83c5092cf) |\n\n### Selection rationale\n- **uniswap-v3 (33.4%):** APY above policy threshold. Risk score within mandate limits. Protocol whitelisted in policy. Pool TVL above minimum threshold\n  _Mandate: `test-mandate-003` | Generated (UTC): `15 Apr 2026, 17:59 UTC` | Local: `15 Apr 2026, 23:29 IST`_\n---\n- **curve-dex (27.7%):** APY above policy threshold. Risk score within mandate limits. Protocol whitelisted in policy. Pool TVL above minimum threshold\n  _Mandate: `test-mandate-003` | Generated (UTC): `15 Apr 2026, 17:59 UTC` | Local: `15 Apr 2026, 23:29 IST`_\n---\n- **uniswap-v3 (13.4%):** APY above policy threshold. Risk score within mandate limits. Protocol whitelisted in policy. Pool TVL above minimum threshold\n  _Mandate: `test-mandate-003` | Generated (UTC): `15 Apr 2026, 17:59 UTC` | Local: `15 Apr 2026, 23:29 IST`_\n---\n- **uniswap-v3 (13.2%):** APY above policy threshold. Risk score within mandate limits. Protocol whitelisted in policy. Pool TVL above minimum threshold\n  _Mandate: `test-mandate-003` | Generated (UTC): `15 Apr 2026, 17:59 UTC` | Local: `15 Apr 2026, 23:29 IST`_\n---\n- **uniswap-v3 (12.3%):** APY above policy threshold. Risk score within mandate limits. Protocol whitelisted in policy. Pool TVL above minimum threshold\n  _Mandate: `test-mandate-003` | Generated (UTC): `15 Apr 2026, 17:59 UTC` | Local: `15 Apr 2026, 23:29 IST`_\n---\n\n### Mandate & approval\n- **Mandate ID:** test-mandate-003\n- **Approval Ref:** manual-test-mandate-003\n- **Generated At (UTC):** 15 Apr 2026, 17:59 UTC\n- **Generated At (Local):** 15 Apr 2026, 23:29 IST\n\n---\n*Generated by RDA Treasury Advisor. Review before publishing.*"
+  },
+  "timestamp": "2026-04-15T17:59:21.872465Z"
+}
+----- End Entry -----
+
+===== Treasury Recommendation Entry | UTC: 15 Apr 2026, 18:04 UTC | Local: 15 Apr 2026, 23:34 IST =====
+Mandate: test-mandate-001
+Run ID: 9457ae3b-9c8d-406d-b832-6d29f24e3c19
+Generated At (UTC): 15 Apr 2026, 18:04 UTC
+Generated At (Local): 15 Apr 2026, 23:34 IST
+{
+  "run_id": "9457ae3b-9c8d-406d-b832-6d29f24e3c19",
+  "mandate_id": "test-mandate-001",
+  "policy_snapshot": {
+    "min_apy": 1.0,
+    "max_apy": null,
+    "risk": {
+      "max_level": "high",
+      "min_score": 20
+    },
+    "allowed_protocols": [
+      "aave",
+      "compound",
+      "curve",
+      "uniswap",
+      "balancer",
+      "pendle"
+    ],
+    "allowed_chains": [
+      "ethereum",
+      "arbitrum",
+      "polygon",
+      "optimism",
+      "base"
+    ],
+    "max_tvl_per_pool_pct": 40.0,
+    "min_pool_tvl_usd": 1000000,
+    "amount_usd": 100000,
+    "preference": "balanced"
+  },
+  "recommendation_output": {
+    "recommendation": {
+      "recommended_pools": [
+        {
+          "id": "f981a304-bb6c-45b8-b0c5-fd2f515ad23a",
+          "protocol": "aave-v3",
+          "chain": "Ethereum",
+          "tvl": 1036491768,
+          "apy": 2.3505,
+          "symbol": "USDT",
+          "project": "aave-v3",
+          "url": null,
+          "poolMeta": null,
+          "underlyingTokens": [
+            "0xdAC17F958D2ee523a2206206994597C13D831ec7"
+          ],
+          "rewardTokens": null,
+          "last_updated": "2026-04-15 18:04:13.859352",
+          "riskData": {
+            "poolId": "f981a304-bb6c-45b8-b0c5-fd2f515ad23a",
+            "riskScore": 100.0,
+            "riskLevel": "very_low",
+            "riskReasoning": "This pool has a VERY LOW risk profile. \u2713 Excellent liquidity with $1,036,491,768 TVL provides strong stability and low slippage risk. \u2713 Aave-V3 is an established protocol with strong track record and audits. \u2713 Low APY (2.4%) indicates very conservative, stable yield. \u2713 No known exploit history.",
+            "factors": {
+              "contractVerified": null,
+              "auditLink": null,
+              "holderConcentration": null,
+              "liquidityScore": null,
+              "exploitHistory": null,
+              "existingRisk": null
+            },
+            "confidence": 0.0,
+            "recommendations": [
+              "\u2705 Low risk pool - suitable for conservative investments",
+              "\ud83d\udcc8 Good choice for long-term holdings",
+              "\ud83d\udca7 High liquidity - excellent for large transactions",
+              "\ud83c\udfe6 Established protocol with strong track record"
+            ],
+            "originalPoolData": {
+              "id": "f981a304-bb6c-45b8-b0c5-fd2f515ad23a",
+              "protocol": "aave-v3",
+              "chain": "Ethereum",
+              "tvl": 1036491768,
+              "apy": 2.3505,
+              "symbol": "USDT",
+              "project": "aave-v3",
+              "url": null,
+              "poolMeta": null,
+              "underlyingTokens": [
+                "0xdAC17F958D2ee523a2206206994597C13D831ec7"
+              ],
+              "rewardTokens": null,
+              "last_updated": "2026-04-15 18:04:13.859352"
+            }
+          },
+          "totalScore": 0.6019,
+          "scoreFactors": {
+            "normalized_apy": 0.004788513785977532,
+            "normalized_risk_score": 1.0,
+            "normalized_tvl": 1.0,
+            "weights": {
+              "apy": 0.4,
+              "risk": 0.35,
+              "tvl": 0.25
+            },
+            "preference": "balanced"
+          },
+          "ranking": 1,
+          "explanation": [
+            "APY above policy threshold",
+            "Risk score within mandate limits",
+            "Protocol whitelisted in policy",
+            "Pool TVL above minimum threshold"
+          ],
+          "selection_reason": "APY above policy threshold. Risk score within mandate limits. Protocol whitelisted in policy. Pool TVL above minimum threshold"
+        },
+        {
+          "id": "aa70268e-4b52-42bf-a116-608b370f9501",
+          "protocol": "aave-v3",
+          "chain": "Ethereum",
+          "tvl": 732717238,
+          "apy": 2.35277,
+          "symbol": "USDC",
+          "project": "aave-v3",
+          "url": null,
+          "poolMeta": null,
+          "underlyingTokens": [
+            "0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48"
+          ],
+          "rewardTokens": null,
+          "last_updated": "2026-04-15 18:04:13.859365",
+          "riskData": {
+            "poolId": "aa70268e-4b52-42bf-a116-608b370f9501",
+            "riskScore": 100.0,
+            "riskLevel": "very_low",
+            "riskReasoning": "This pool has a VERY LOW risk profile. \u2713 Excellent liquidity with $732,717,238 TVL provides strong stability and low slippage risk. \u2713 Aave-V3 is an established protocol with strong track record and audits. \u2713 Low APY (2.4%) indicates very conservative, stable yield. \u2713 No known exploit history.",
+            "factors": {
+              "contractVerified": null,
+              "auditLink": null,
+              "holderConcentration": null,
+              "liquidityScore": null,
+              "exploitHistory": null,
+              "existingRisk": null
+            },
+            "confidence": 0.0,
+            "recommendations": [
+              "\u2705 Low risk pool - suitable for conservative investments",
+              "\ud83d\udcc8 Good choice for long-term holdings",
+              "\ud83d\udca7 High liquidity - excellent for large transactions",
+              "\ud83c\udfe6 Established protocol with strong track record"
+            ],
+            "originalPoolData": {
+              "id": "aa70268e-4b52-42bf-a116-608b370f9501",
+              "protocol": "aave-v3",
+              "chain": "Ethereum",
+              "tvl": 732717238,
+              "apy": 2.35277,
+              "symbol": "USDC",
+              "project": "aave-v3",
+              "url": null,
+              "poolMeta": null,
+              "underlyingTokens": [
+                "0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48"
+              ],
+              "rewardTokens": null,
+              "last_updated": "2026-04-15 18:04:13.859365"
+            }
+          },
+          "totalScore": 0.5286,
+          "scoreFactors": {
+            "normalized_apy": 0.004807286758058237,
+            "normalized_risk_score": 1.0,
+            "normalized_tvl": 0.7066244934115935,
+            "weights": {
+              "apy": 0.4,
+              "risk": 0.35,
+              "tvl": 0.25
+            },
+            "preference": "balanced"
+          },
+          "ranking": 2,
+          "explanation": [
+            "APY above policy threshold",
+            "Risk score within mandate limits",
+            "Protocol whitelisted in policy",
+            "Pool TVL above minimum threshold"
+          ],
+          "selection_reason": "APY above policy threshold. Risk score within mandate limits. Protocol whitelisted in policy. Pool TVL above minimum threshold"
+        },
+        {
+          "id": "e880e828-ca59-4ec6-8d4f-27182a4dc23d",
+          "protocol": "aave-v3",
+          "chain": "Ethereum",
+          "tvl": 666393551,
+          "apy": 1.77148,
+          "symbol": "WETH",
+          "project": "aave-v3",
+          "url": null,
+          "poolMeta": null,
+          "underlyingTokens": [
+            "0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2"
+          ],
+          "rewardTokens": null,
+          "last_updated": "2026-04-15 18:04:13.859369",
+          "riskData": {
+            "poolId": "e880e828-ca59-4ec6-8d4f-27182a4dc23d",
+            "riskScore": 100.0,
+            "riskLevel": "very_low",
+            "riskReasoning": "This pool has a VERY LOW risk profile. \u2713 Excellent liquidity with $666,393,551 TVL provides strong stability and low slippage risk. \u2713 Aave-V3 is an established protocol with strong track record and audits. \u2713 Low APY (1.8%) indicates very conservative, stable yield. \u2713 No known exploit history.",
+            "factors": {
+              "contractVerified": null,
+              "auditLink": null,
+              "holderConcentration": null,
+              "liquidityScore": null,
+              "exploitHistory": null,
+              "existingRisk": null
+            },
+            "confidence": 0.0,
+            "recommendations": [
+              "\u2705 Low risk pool - suitable for conservative investments",
+              "\ud83d\udcc8 Good choice for long-term holdings",
+              "\ud83d\udca7 High liquidity - excellent for large transactions",
+              "\ud83c\udfe6 Established protocol with strong track record"
+            ],
+            "originalPoolData": {
+              "id": "e880e828-ca59-4ec6-8d4f-27182a4dc23d",
+              "protocol": "aave-v3",
+              "chain": "Ethereum",
+              "tvl": 666393551,
+              "apy": 1.77148,
+              "symbol": "WETH",
+              "project": "aave-v3",
+              "url": null,
+              "poolMeta": null,
+              "underlyingTokens": [
+                "0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2"
+              ],
+              "rewardTokens": null,
+              "last_updated": "2026-04-15 18:04:13.859369"
+            }
+          },
+          "totalScore": 0.5106,
+          "scoreFactors": {
+            "normalized_apy": 0.0,
+            "normalized_risk_score": 1.0,
+            "normalized_tvl": 0.6425712455226545,
+            "weights": {
+              "apy": 0.4,
+              "risk": 0.35,
+              "tvl": 0.25
+            },
+            "preference": "balanced"
+          },
+          "ranking": 3,
+          "explanation": [
+            "APY above policy threshold",
+            "Risk score within mandate limits",
+            "Protocol whitelisted in policy",
+            "Pool TVL above minimum threshold"
+          ],
+          "selection_reason": "APY above policy threshold. Risk score within mandate limits. Protocol whitelisted in policy. Pool TVL above minimum threshold"
+        }
+      ],
+      "allocation": [
+        {
+          "pool_id": "f981a304-bb6c-45b8-b0c5-fd2f515ad23a",
+          "protocol": "aave-v3",
+          "chain": "Ethereum",
+          "apy": 2.3505,
+          "risk_score": 100.0,
+          "risk_level": "very_low",
+          "tvl": 1036491768,
+          "score": 0.6019,
+          "pct": 24.8,
+          "amount_usd": 24789.95,
+          "url": "",
+          "explanation": [
+            "APY above policy threshold",
+            "Risk score within mandate limits",
+            "Protocol whitelisted in policy",
+            "Pool TVL above minimum threshold"
+          ]
+        },
+        {
+          "pool_id": "aa70268e-4b52-42bf-a116-608b370f9501",
+          "protocol": "aave-v3",
+          "chain": "Ethereum",
+          "apy": 2.35277,
+          "risk_score": 100.0,
+          "risk_level": "very_low",
+          "tvl": 732717238,
+          "score": 0.5286,
+          "pct": 21.8,
+          "amount_usd": 21771.0,
+          "url": "",
+          "explanation": [
+            "APY above policy threshold",
+            "Risk score within mandate limits",
+            "Protocol whitelisted in policy",
+            "Pool TVL above minimum threshold"
+          ]
+        },
+        {
+          "pool_id": "e880e828-ca59-4ec6-8d4f-27182a4dc23d",
+          "protocol": "aave-v3",
+          "chain": "Ethereum",
+          "apy": 1.77148,
+          "risk_score": 100.0,
+          "risk_level": "very_low",
+          "tvl": 666393551,
+          "score": 0.5106,
+          "pct": 21.0,
+          "amount_usd": 21029.65,
+          "url": "",
+          "explanation": [
+            "APY above policy threshold",
+            "Risk score within mandate limits",
+            "Protocol whitelisted in policy",
+            "Pool TVL above minimum threshold"
+          ]
+        },
+        {
+          "pool_id": "7e218bc2-186c-473d-af0c-415bcdfe392b",
+          "protocol": "curve-dex",
+          "chain": "Ethereum",
+          "apy": 122.69,
+          "risk_score": 60.0,
+          "risk_level": "low",
+          "tvl": 1616565,
+          "score": 0.4001,
+          "pct": 16.5,
+          "amount_usd": 16478.58,
+          "url": "",
+          "explanation": [
+            "APY above policy threshold",
+            "Risk score within mandate limits",
+            "Protocol whitelisted in policy",
+            "Pool TVL above minimum threshold"
+          ]
+        },
+        {
+          "pool_id": "b99bcdf5-1350-4269-981e-0e9b5cccb007",
+          "protocol": "uniswap-v3",
+          "chain": "Base",
+          "apy": 57.86458,
+          "risk_score": 80.0,
+          "risk_level": "very_low",
+          "tvl": 109878883,
+          "score": 0.3868,
+          "pct": 15.9,
+          "amount_usd": 15930.81,
+          "url": "",
+          "explanation": [
+            "APY above policy threshold",
+            "Risk score within mandate limits",
+            "Protocol whitelisted in policy",
+            "Pool TVL above minimum threshold"
+          ]
+        }
+      ],
+      "expected_portfolio_apy": 30.9,
+      "total_allocated_usd": 99999.99,
+      "reasoning_trace": [
+        {
+          "step": 1,
+          "agent": "DecisionAgent",
+          "action": "filter_pools",
+          "input": {
+            "totalPools": 10,
+            "criteria": {
+              "min_apy": 1.0,
+              "max_apy": null,
+              "target_apy": null,
+              "preference": "balanced",
+              "min_pool_tvl_usd": 1000000.0,
+              "amount_usd": 100000.0,
+              "top_n": 10,
+              "risk": {
+                "max_level": "high",
+                "min_score": 20
+              },
+              "allowed_protocols": [
+                "aave",
+                "compound",
+                "curve",
+                "uniswap",
+                "balancer",
+                "pendle"
+              ],
+              "allowed_chains": [
+                "ethereum",
+                "arbitrum",
+                "polygon",
+                "optimism",
+                "base"
+              ],
+              "max_tvl_per_pool_pct": 40.0
+            }
+          },
+          "output": {
+            "filteredPools": 10,
+            "filtersApplied": [
+              "min_apy",
+              "max_apy",
+              "target_apy",
+              "preference",
+              "min_pool_tvl_usd",
+              "amount_usd",
+              "top_n",
+              "risk",
+              "allowed_protocols",
+              "allowed_chains",
+              "max_tvl_per_pool_pct"
+            ]
+          },
+          "reasoning": "Filtered pools based on criteria: min_apy, max_apy, target_apy, preference, min_pool_tvl_usd, amount_usd, top_n, risk, allowed_protocols, allowed_chains, max_tvl_per_pool_pct",
+          "timestamp": "2026-04-15T23:34:15.596981"
+        },
+        {
+          "step": 2,
+          "agent": "DecisionAgent",
+          "action": "score_pools",
+          "input": {
+            "poolsToScore": 10,
+            "preference": "balanced"
+          },
+          "output": {
+            "scoringFactors": [
+              "normalized_apy",
+              "normalized_risk_score",
+              "normalized_tvl",
+              "weights",
+              "preference"
+            ],
+            "topScores": [
+              {
+                "id": "f981a304-bb6c-45b8-b0c5-fd2f515ad23a",
+                "score": 0.6019
+              },
+              {
+                "id": "aa70268e-4b52-42bf-a116-608b370f9501",
+                "score": 0.5286
+              },
+              {
+                "id": "e880e828-ca59-4ec6-8d4f-27182a4dc23d",
+                "score": 0.5106
+              }
+            ],
+            "weights": {
+              "apy": 0.4,
+              "risk": 0.35,
+              "tvl": 0.25
+            }
+          },
+          "reasoning": "Scored using 'balanced' preference: score = 0.4*norm_apy + 0.35*norm_risk + 0.25*norm_tvl (each normalized to [0,1] over candidate set)",
+          "timestamp": "2026-04-15T23:34:15.596991"
+        },
+        {
+          "step": 3,
+          "agent": "DecisionAgent",
+          "action": "select_optimal",
+          "input": {
+            "candidatePools": 10
+          },
+          "output": {
+            "selectedPool": {
+              "id": "f981a304-bb6c-45b8-b0c5-fd2f515ad23a",
+              "protocol": "aave-v3",
+              "score": 0.6019,
+              "apy": 2.3505,
+              "riskScore": 50
+            }
+          },
+          "reasoning": "Selected f981a304-bb6c-45b8-b0c5-fd2f515ad23a with highest composite score (0.6019)",
+          "timestamp": "2026-04-15T23:34:15.596994"
+        },
+        {
+          "step": 4,
+          "agent": "DecisionAgent",
+          "action": "justify_selection",
+          "input": {
+            "selectedPool": "f981a304-bb6c-45b8-b0c5-fd2f515ad23a"
+          },
+          "output": {
+            "justification": {
+              "apyAdvantage": 2.3505,
+              "riskAssessment": "medium",
+              "liquidityStrength": 1036491768,
+              "protocolReliability": "aave-v3"
+            }
+          },
+          "reasoning": "Pool selected due to 2.3505% APY, medium risk, and strong liquidity of $1,036,491,768",
+          "timestamp": "2026-04-15T23:34:15.596998"
+        }
+      ]
+    },
+    "proposal_draft": "## Treasury Allocation Proposal\n\nAllocate **$100,000** from treasury across **5 pools**.\n\n### Portfolio summary\n- **Total allocated:** $100,000\n- **Expected portfolio APY:** 30.9%\n- **Number of pools:** 5\n\n### Allocation breakdown\n\n| Pool / Protocol | Chain | Allocation | Amount | APY | Risk | Verify |\n| --- | --- | --- | --- | --- | --- | --- |\n| aave-v3 | Ethereum | 24.8% | $24,790 | 2.35% | 100.0/100 | [DeFiLlama \u2197](https://defillama.com/yields/pool/f981a304-bb6c-45b8-b0c5-fd2f515ad23a) |\n| aave-v3 | Ethereum | 21.8% | $21,771 | 2.35% | 100.0/100 | [DeFiLlama \u2197](https://defillama.com/yields/pool/aa70268e-4b52-42bf-a116-608b370f9501) |\n| aave-v3 | Ethereum | 21.0% | $21,030 | 1.77% | 100.0/100 | [DeFiLlama \u2197](https://defillama.com/yields/pool/e880e828-ca59-4ec6-8d4f-27182a4dc23d) |\n| curve-dex | Ethereum | 16.5% | $16,479 | 122.69% | 60.0/100 | [DeFiLlama \u2197](https://defillama.com/yields/pool/7e218bc2-186c-473d-af0c-415bcdfe392b) |\n| uniswap-v3 | Base | 15.9% | $15,931 | 57.86% | 80.0/100 | [DeFiLlama \u2197](https://defillama.com/yields/pool/b99bcdf5-1350-4269-981e-0e9b5cccb007) |\n\n### Selection rationale\n- **aave-v3 (24.8%):** APY above policy threshold. Risk score within mandate limits. Protocol whitelisted in policy. Pool TVL above minimum threshold\n  _Mandate: `test-mandate-001` | Generated (UTC): `15 Apr 2026, 18:04 UTC` | Local: `15 Apr 2026, 23:34 IST`_\n---\n- **aave-v3 (21.8%):** APY above policy threshold. Risk score within mandate limits. Protocol whitelisted in policy. Pool TVL above minimum threshold\n  _Mandate: `test-mandate-001` | Generated (UTC): `15 Apr 2026, 18:04 UTC` | Local: `15 Apr 2026, 23:34 IST`_\n---\n- **aave-v3 (21.0%):** APY above policy threshold. Risk score within mandate limits. Protocol whitelisted in policy. Pool TVL above minimum threshold\n  _Mandate: `test-mandate-001` | Generated (UTC): `15 Apr 2026, 18:04 UTC` | Local: `15 Apr 2026, 23:34 IST`_\n---\n- **curve-dex (16.5%):** APY above policy threshold. Risk score within mandate limits. Protocol whitelisted in policy. Pool TVL above minimum threshold\n  _Mandate: `test-mandate-001` | Generated (UTC): `15 Apr 2026, 18:04 UTC` | Local: `15 Apr 2026, 23:34 IST`_\n---\n- **uniswap-v3 (15.9%):** APY above policy threshold. Risk score within mandate limits. Protocol whitelisted in policy. Pool TVL above minimum threshold\n  _Mandate: `test-mandate-001` | Generated (UTC): `15 Apr 2026, 18:04 UTC` | Local: `15 Apr 2026, 23:34 IST`_\n---\n\n### Mandate & approval\n- **Mandate ID:** test-mandate-001\n- **Approval Ref:** Snapshot proposal #TEST-001\n- **Generated At (UTC):** 15 Apr 2026, 18:04 UTC\n- **Generated At (Local):** 15 Apr 2026, 23:34 IST\n\n---\n*Generated by RDA Treasury Advisor. Review before publishing.*"
+  },
+  "timestamp": "2026-04-15T18:04:15.597443Z"
+}
+----- End Entry -----
+
+===== Treasury Recommendation Entry | UTC: 15 Apr 2026, 18:04 UTC | Local: 15 Apr 2026, 23:34 IST =====
+Mandate: test-mandate-003
+Run ID: 8063b959-be0c-4b8a-9348-c0c9346fe002
+Generated At (UTC): 15 Apr 2026, 18:04 UTC
+Generated At (Local): 15 Apr 2026, 23:34 IST
+{
+  "run_id": "8063b959-be0c-4b8a-9348-c0c9346fe002",
+  "mandate_id": "test-mandate-003",
+  "policy_snapshot": {
+    "amount_usd": 500000.0,
+    "min_apy": 2.0,
+    "max_apy": null,
+    "risk": {
+      "max_level": "medium",
+      "min_score": 30
+    },
+    "allowed_protocols": [
+      "aave",
+      "compound",
+      "curve",
+      "uniswap",
+      "balancer",
+      "pendle"
+    ],
+    "allowed_chains": [
+      "ethereum",
+      "arbitrum",
+      "polygon",
+      "optimism",
+      "base"
+    ],
+    "min_pool_tvl_usd": 1000000.0,
+    "max_tvl_per_pool_pct": 40.0,
+    "preference": "highest_yield"
+  },
+  "recommendation_output": {
+    "recommendation": {
+      "recommended_pools": [
+        {
+          "id": "7e218bc2-186c-473d-af0c-415bcdfe392b",
+          "protocol": "curve-dex",
+          "chain": "Ethereum",
+          "tvl": 1616565,
+          "apy": 122.69,
+          "symbol": "IDAI-IUSDC-IUSDT",
+          "project": "curve-dex",
+          "url": null,
+          "poolMeta": null,
+          "underlyingTokens": [
+            "0x8e595470Ed749b85C6F7669de83EAe304C2ec68F",
+            "0x76Eb2FE28b36B3ee97F3Adae0C69606eeDB2A37c",
+            "0x48759F220ED983dB51fA7A8C0D2AAb8f3ce4166a"
+          ],
+          "rewardTokens": null,
+          "last_updated": "2026-04-15 18:04:27.424581",
+          "riskData": {
+            "poolId": "7e218bc2-186c-473d-af0c-415bcdfe392b",
+            "riskScore": 60.0,
+            "riskLevel": "low",
+            "riskReasoning": "This pool has a LOW risk profile. \u26a0 Moderate liquidity at $1,616,565 TVL - some slippage risk on large trades. \u2713 Curve-Dex is an established protocol with strong track record and audits. \u26a0 Extremely high APY (122.7%) suggests high risk or temporary incentives - verify sustainability. \u2713 No known exploit history.",
+            "factors": {
+              "contractVerified": null,
+              "auditLink": null,
+              "holderConcentration": null,
+              "liquidityScore": null,
+              "exploitHistory": null,
+              "existingRisk": null
+            },
+            "confidence": 0.0,
+            "recommendations": [
+              "\u2696\ufe0f Medium risk - suitable for balanced portfolios",
+              "\ud83d\udcca Very high APY - verify sustainability and potential IL risks",
+              "\ud83c\udfe6 Established protocol with strong track record"
+            ],
+            "originalPoolData": {
+              "id": "7e218bc2-186c-473d-af0c-415bcdfe392b",
+              "protocol": "curve-dex",
+              "chain": "Ethereum",
+              "tvl": 1616565,
+              "apy": 122.69,
+              "symbol": "IDAI-IUSDC-IUSDT",
+              "project": "curve-dex",
+              "url": null,
+              "poolMeta": null,
+              "underlyingTokens": [
+                "0x8e595470Ed749b85C6F7669de83EAe304C2ec68F",
+                "0x76Eb2FE28b36B3ee97F3Adae0C69606eeDB2A37c",
+                "0x48759F220ED983dB51fA7A8C0D2AAb8f3ce4166a"
+              ],
+              "rewardTokens": null,
+              "last_updated": "2026-04-15 18:04:27.424581"
+            }
+          },
+          "totalScore": 0.7005,
+          "scoreFactors": {
+            "normalized_apy": 1.0,
+            "normalized_risk_score": 0.0,
+            "normalized_tvl": 0.005245796470168327,
+            "weights": {
+              "apy": 0.7,
+              "risk": 0.2,
+              "tvl": 0.1
+            },
+            "preference": "highest_yield"
+          },
+          "ranking": 1,
+          "explanation": [
+            "APY above policy threshold",
+            "Risk score within mandate limits",
+            "Protocol whitelisted in policy",
+            "Pool TVL above minimum threshold"
+          ],
+          "selection_reason": "APY above policy threshold. Risk score within mandate limits. Protocol whitelisted in policy. Pool TVL above minimum threshold"
+        },
+        {
+          "id": "b99bcdf5-1350-4269-981e-0e9b5cccb007",
+          "protocol": "uniswap-v3",
+          "chain": "Base",
+          "tvl": 109878883,
+          "apy": 57.86458,
+          "symbol": "WETH-USDC",
+          "project": "uniswap-v3",
+          "url": null,
+          "poolMeta": "0.3%",
+          "underlyingTokens": [
+            "0x4200000000000000000000000000000000000006",
+            "0x833589fcd6edb6e08f4c7c32d4f71b54bda02913"
+          ],
+          "rewardTokens": null,
+          "last_updated": "2026-04-15 18:04:27.421891",
+          "riskData": {
+            "poolId": "b99bcdf5-1350-4269-981e-0e9b5cccb007",
+            "riskScore": 80.0,
+            "riskLevel": "very_low",
+            "riskReasoning": "This pool has a VERY LOW risk profile. \u2713 Excellent liquidity with $109,878,883 TVL provides strong stability and low slippage risk. \u2713 Uniswap-V3 is an established protocol with strong track record and audits. \u26a0 Very high APY (57.9%) - check for impermanent loss risks and reward token volatility. \u2713 No known exploit history.",
+            "factors": {
+              "contractVerified": null,
+              "auditLink": null,
+              "holderConcentration": null,
+              "liquidityScore": null,
+              "exploitHistory": null,
+              "existingRisk": null
+            },
+            "confidence": 0.0,
+            "recommendations": [
+              "\u2705 Low risk pool - suitable for conservative investments",
+              "\ud83d\udcc8 Good choice for long-term holdings",
+              "\ud83d\udca7 High liquidity - excellent for large transactions",
+              "\ud83d\udcca Very high APY - verify sustainability and potential IL risks"
+            ],
+            "originalPoolData": {
+              "id": "b99bcdf5-1350-4269-981e-0e9b5cccb007",
+              "protocol": "uniswap-v3",
+              "chain": "Base",
+              "tvl": 109878883,
+              "apy": 57.86458,
+              "symbol": "WETH-USDC",
+              "project": "uniswap-v3",
+              "url": null,
+              "poolMeta": "0.3%",
+              "underlyingTokens": [
+                "0x4200000000000000000000000000000000000006",
+                "0x833589fcd6edb6e08f4c7c32d4f71b54bda02913"
+              ],
+              "rewardTokens": null,
+              "last_updated": "2026-04-15 18:04:27.421891"
+            }
+          },
+          "totalScore": 0.4441,
+          "scoreFactors": {
+            "normalized_apy": 0.20589139629174202,
+            "normalized_risk_score": 1.0,
+            "normalized_tvl": 1.0,
+            "weights": {
+              "apy": 0.7,
+              "risk": 0.2,
+              "tvl": 0.1
+            },
+            "preference": "highest_yield"
+          },
+          "ranking": 2,
+          "explanation": [
+            "APY above policy threshold",
+            "Risk score within mandate limits",
+            "Protocol whitelisted in policy",
+            "Pool TVL above minimum threshold"
+          ],
+          "selection_reason": "APY above policy threshold. Risk score within mandate limits. Protocol whitelisted in policy. Pool TVL above minimum threshold"
+        },
+        {
+          "id": "3e9da80c-274d-4f55-8421-7439d4ef429d",
+          "protocol": "uniswap-v3",
+          "chain": "Arbitrum",
+          "tvl": 1944025,
+          "apy": 80.23697,
+          "symbol": "WETH-ARB",
+          "project": "uniswap-v3",
+          "url": null,
+          "poolMeta": "0.05%",
+          "underlyingTokens": [
+            "0x82af49447d8a07e3bd95bd0d56f35241523fbab1",
+            "0x912ce59144191c1204e64559fe8253a0e49e6548"
+          ],
+          "rewardTokens": null,
+          "last_updated": "2026-04-15 18:04:27.424344",
+          "riskData": {
+            "poolId": "3e9da80c-274d-4f55-8421-7439d4ef429d",
+            "riskScore": 60.0,
+            "riskLevel": "low",
+            "riskReasoning": "This pool has a LOW risk profile. \u26a0 Moderate liquidity at $1,944,025 TVL - some slippage risk on large trades. \u2713 Uniswap-V3 is an established protocol with strong track record and audits. \u26a0 Very high APY (80.2%) - check for impermanent loss risks and reward token volatility. \u2713 No known exploit history.",
+            "factors": {
+              "contractVerified": null,
+              "auditLink": null,
+              "holderConcentration": null,
+              "liquidityScore": null,
+              "exploitHistory": null,
+              "existingRisk": null
+            },
+            "confidence": 0.0,
+            "recommendations": [
+              "\u2696\ufe0f Medium risk - suitable for balanced portfolios",
+              "\ud83d\udcca Very high APY - verify sustainability and potential IL risks",
+              "\ud83c\udfe6 Established protocol with strong track record"
+            ],
+            "originalPoolData": {
+              "id": "3e9da80c-274d-4f55-8421-7439d4ef429d",
+              "protocol": "uniswap-v3",
+              "chain": "Arbitrum",
+              "tvl": 1944025,
+              "apy": 80.23697,
+              "symbol": "WETH-ARB",
+              "project": "uniswap-v3",
+              "url": null,
+              "poolMeta": "0.05%",
+              "underlyingTokens": [
+                "0x82af49447d8a07e3bd95bd0d56f35241523fbab1",
+                "0x912ce59144191c1204e64559fe8253a0e49e6548"
+              ],
+              "rewardTokens": null,
+              "last_updated": "2026-04-15 18:04:27.424344"
+            }
+          },
+          "totalScore": 0.3368,
+          "scoreFactors": {
+            "normalized_apy": 0.47995221046798026,
+            "normalized_risk_score": 0.0,
+            "normalized_tvl": 0.008254620015659738,
+            "weights": {
+              "apy": 0.7,
+              "risk": 0.2,
+              "tvl": 0.1
+            },
+            "preference": "highest_yield"
+          },
+          "ranking": 3,
+          "explanation": [
+            "APY above policy threshold",
+            "Risk score within mandate limits",
+            "Protocol whitelisted in policy",
+            "Pool TVL above minimum threshold"
+          ],
+          "selection_reason": "APY above policy threshold. Risk score within mandate limits. Protocol whitelisted in policy. Pool TVL above minimum threshold"
+        }
+      ],
+      "allocation": [
+        {
+          "pool_id": "7e218bc2-186c-473d-af0c-415bcdfe392b",
+          "protocol": "curve-dex",
+          "chain": "Ethereum",
+          "apy": 122.69,
+          "risk_score": 60.0,
+          "risk_level": "low",
+          "tvl": 1616565,
+          "score": 0.7005,
+          "pct": 33.0,
+          "amount_usd": 164862.32,
+          "url": "",
+          "explanation": [
+            "APY above policy threshold",
+            "Risk score within mandate limits",
+            "Protocol whitelisted in policy",
+            "Pool TVL above minimum threshold"
+          ]
+        },
+        {
+          "pool_id": "b99bcdf5-1350-4269-981e-0e9b5cccb007",
+          "protocol": "uniswap-v3",
+          "chain": "Base",
+          "apy": 57.86458,
+          "risk_score": 80.0,
+          "risk_level": "very_low",
+          "tvl": 109878883,
+          "score": 0.4441,
+          "pct": 20.9,
+          "amount_usd": 104518.71,
+          "url": "",
+          "explanation": [
+            "APY above policy threshold",
+            "Risk score within mandate limits",
+            "Protocol whitelisted in policy",
+            "Pool TVL above minimum threshold"
+          ]
+        },
+        {
+          "pool_id": "3e9da80c-274d-4f55-8421-7439d4ef429d",
+          "protocol": "uniswap-v3",
+          "chain": "Arbitrum",
+          "apy": 80.23697,
+          "risk_score": 60.0,
+          "risk_level": "low",
+          "tvl": 1944025,
+          "score": 0.3368,
+          "pct": 15.9,
+          "amount_usd": 79265.71,
+          "url": "",
+          "explanation": [
+            "APY above policy threshold",
+            "Risk score within mandate limits",
+            "Protocol whitelisted in policy",
+            "Pool TVL above minimum threshold"
+          ]
+        },
+        {
+          "pool_id": "e9440a04-578f-43b8-8c53-c44c1187183d",
+          "protocol": "uniswap-v3",
+          "chain": "Ethereum",
+          "apy": 79.66444,
+          "risk_score": 60.0,
+          "risk_level": "low",
+          "tvl": 2432982,
+          "score": 0.3323,
+          "pct": 15.6,
+          "amount_usd": 78206.64,
+          "url": "",
+          "explanation": [
+            "APY above policy threshold",
+            "Risk score within mandate limits",
+            "Protocol whitelisted in policy",
+            "Pool TVL above minimum threshold"
+          ]
+        },
+        {
+          "pool_id": "46528137-34ed-4b6e-8777-1da83c5092cf",
+          "protocol": "uniswap-v3",
+          "chain": "Ethereum",
+          "apy": 77.29785,
+          "risk_score": 60.0,
+          "risk_level": "low",
+          "tvl": 1045648,
+          "score": 0.3108,
+          "pct": 14.6,
+          "amount_usd": 73146.62,
+          "url": "",
+          "explanation": [
+            "APY above policy threshold",
+            "Risk score within mandate limits",
+            "Protocol whitelisted in policy",
+            "Pool TVL above minimum threshold"
+          ]
+        }
+      ],
+      "expected_portfolio_apy": 89.04,
+      "total_allocated_usd": 500000.0,
+      "reasoning_trace": [
+        {
+          "step": 1,
+          "agent": "DecisionAgent",
+          "action": "filter_pools",
+          "input": {
+            "totalPools": 10,
+            "criteria": {
+              "min_apy": 2.0,
+              "max_apy": null,
+              "target_apy": null,
+              "preference": "highest_yield",
+              "min_pool_tvl_usd": 1000000.0,
+              "amount_usd": 500000.0,
+              "top_n": 10,
+              "risk": {
+                "max_level": "medium",
+                "min_score": 30
+              },
+              "allowed_protocols": [
+                "aave",
+                "compound",
+                "curve",
+                "uniswap",
+                "balancer",
+                "pendle"
+              ],
+              "allowed_chains": [
+                "ethereum",
+                "arbitrum",
+                "polygon",
+                "optimism",
+                "base"
+              ],
+              "max_tvl_per_pool_pct": 40.0
+            }
+          },
+          "output": {
+            "filteredPools": 10,
+            "filtersApplied": [
+              "min_apy",
+              "max_apy",
+              "target_apy",
+              "preference",
+              "min_pool_tvl_usd",
+              "amount_usd",
+              "top_n",
+              "risk",
+              "allowed_protocols",
+              "allowed_chains",
+              "max_tvl_per_pool_pct"
+            ]
+          },
+          "reasoning": "Filtered pools based on criteria: min_apy, max_apy, target_apy, preference, min_pool_tvl_usd, amount_usd, top_n, risk, allowed_protocols, allowed_chains, max_tvl_per_pool_pct",
+          "timestamp": "2026-04-15T23:34:28.088925"
+        },
+        {
+          "step": 2,
+          "agent": "DecisionAgent",
+          "action": "score_pools",
+          "input": {
+            "poolsToScore": 10,
+            "preference": "highest_yield"
+          },
+          "output": {
+            "scoringFactors": [
+              "normalized_apy",
+              "normalized_risk_score",
+              "normalized_tvl",
+              "weights",
+              "preference"
+            ],
+            "topScores": [
+              {
+                "id": "7e218bc2-186c-473d-af0c-415bcdfe392b",
+                "score": 0.7005
+              },
+              {
+                "id": "b99bcdf5-1350-4269-981e-0e9b5cccb007",
+                "score": 0.4441
+              },
+              {
+                "id": "3e9da80c-274d-4f55-8421-7439d4ef429d",
+                "score": 0.3368
+              }
+            ],
+            "weights": {
+              "apy": 0.7,
+              "risk": 0.2,
+              "tvl": 0.1
+            }
+          },
+          "reasoning": "Scored using 'highest_yield' preference: score = 0.7*norm_apy + 0.2*norm_risk + 0.1*norm_tvl (each normalized to [0,1] over candidate set)",
+          "timestamp": "2026-04-15T23:34:28.088936"
+        },
+        {
+          "step": 3,
+          "agent": "DecisionAgent",
+          "action": "select_optimal",
+          "input": {
+            "candidatePools": 10
+          },
+          "output": {
+            "selectedPool": {
+              "id": "7e218bc2-186c-473d-af0c-415bcdfe392b",
+              "protocol": "curve-dex",
+              "score": 0.7005,
+              "apy": 122.69,
+              "riskScore": 50
+            }
+          },
+          "reasoning": "Selected 7e218bc2-186c-473d-af0c-415bcdfe392b with highest composite score (0.7005)",
+          "timestamp": "2026-04-15T23:34:28.088940"
+        },
+        {
+          "step": 4,
+          "agent": "DecisionAgent",
+          "action": "justify_selection",
+          "input": {
+            "selectedPool": "7e218bc2-186c-473d-af0c-415bcdfe392b"
+          },
+          "output": {
+            "justification": {
+              "apyAdvantage": 122.69,
+              "riskAssessment": "medium",
+              "liquidityStrength": 1616565,
+              "protocolReliability": "curve-dex"
+            }
+          },
+          "reasoning": "Pool selected due to 122.69% APY, medium risk, and strong liquidity of $1,616,565",
+          "timestamp": "2026-04-15T23:34:28.088944"
+        }
+      ]
+    },
+    "proposal_draft": "## Treasury Allocation Proposal\n\nAllocate **$500,000** from treasury across **5 pools**.\n\n### Portfolio summary\n- **Total allocated:** $500,000\n- **Expected portfolio APY:** 89.04%\n- **Number of pools:** 5\n\n### Allocation breakdown\n\n| Pool / Protocol | Chain | Allocation | Amount | APY | Risk | Verify |\n| --- | --- | --- | --- | --- | --- | --- |\n| curve-dex | Ethereum | 33.0% | $164,862 | 122.69% | 60.0/100 | [DeFiLlama \u2197](https://defillama.com/yields/pool/7e218bc2-186c-473d-af0c-415bcdfe392b) |\n| uniswap-v3 | Base | 20.9% | $104,519 | 57.86% | 80.0/100 | [DeFiLlama \u2197](https://defillama.com/yields/pool/b99bcdf5-1350-4269-981e-0e9b5cccb007) |\n| uniswap-v3 | Arbitrum | 15.9% | $79,266 | 80.24% | 60.0/100 | [DeFiLlama \u2197](https://defillama.com/yields/pool/3e9da80c-274d-4f55-8421-7439d4ef429d) |\n| uniswap-v3 | Ethereum | 15.6% | $78,207 | 79.66% | 60.0/100 | [DeFiLlama \u2197](https://defillama.com/yields/pool/e9440a04-578f-43b8-8c53-c44c1187183d) |\n| uniswap-v3 | Ethereum | 14.6% | $73,147 | 77.3% | 60.0/100 | [DeFiLlama \u2197](https://defillama.com/yields/pool/46528137-34ed-4b6e-8777-1da83c5092cf) |\n\n### Selection rationale\n- **curve-dex (33.0%):** APY above policy threshold. Risk score within mandate limits. Protocol whitelisted in policy. Pool TVL above minimum threshold\n  _Mandate: `test-mandate-003` | Generated (UTC): `15 Apr 2026, 18:04 UTC` | Local: `15 Apr 2026, 23:34 IST`_\n---\n- **uniswap-v3 (20.9%):** APY above policy threshold. Risk score within mandate limits. Protocol whitelisted in policy. Pool TVL above minimum threshold\n  _Mandate: `test-mandate-003` | Generated (UTC): `15 Apr 2026, 18:04 UTC` | Local: `15 Apr 2026, 23:34 IST`_\n---\n- **uniswap-v3 (15.9%):** APY above policy threshold. Risk score within mandate limits. Protocol whitelisted in policy. Pool TVL above minimum threshold\n  _Mandate: `test-mandate-003` | Generated (UTC): `15 Apr 2026, 18:04 UTC` | Local: `15 Apr 2026, 23:34 IST`_\n---\n- **uniswap-v3 (15.6%):** APY above policy threshold. Risk score within mandate limits. Protocol whitelisted in policy. Pool TVL above minimum threshold\n  _Mandate: `test-mandate-003` | Generated (UTC): `15 Apr 2026, 18:04 UTC` | Local: `15 Apr 2026, 23:34 IST`_\n---\n- **uniswap-v3 (14.6%):** APY above policy threshold. Risk score within mandate limits. Protocol whitelisted in policy. Pool TVL above minimum threshold\n  _Mandate: `test-mandate-003` | Generated (UTC): `15 Apr 2026, 18:04 UTC` | Local: `15 Apr 2026, 23:34 IST`_\n---\n\n### Mandate & approval\n- **Mandate ID:** test-mandate-003\n- **Approval Ref:** manual-test-mandate-003\n- **Generated At (UTC):** 15 Apr 2026, 18:04 UTC\n- **Generated At (Local):** 15 Apr 2026, 23:34 IST\n\n---\n*Generated by RDA Treasury Advisor. Review before publishing.*"
+  },
+  "timestamp": "2026-04-15T18:04:28.089449Z"
+}
+----- End Entry -----
+

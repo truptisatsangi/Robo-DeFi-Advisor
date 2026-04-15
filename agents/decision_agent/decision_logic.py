@@ -8,9 +8,16 @@ from typing import Dict, List, Any
 from dataclasses import dataclass
 from datetime import datetime
 
-# Deterministic ranking formula (documented for DAO governance).
-# score = WEIGHT_APY * normalized_apy + WEIGHT_RISK * normalized_risk_score + WEIGHT_TVL * normalized_tvl
+# Preference-based scoring weights (documented for DAO governance).
+# score = w_apy * normalized_apy + w_risk * normalized_risk_score + w_tvl * normalized_tvl
 # Each variable is normalized to [0, 1] over the candidate set. Same policy + same data => same ranking.
+# Different preference values intentionally produce different pool orderings.
+PREFERENCE_WEIGHTS: dict = {
+    "safest":        {"apy": 0.15, "risk": 0.65, "tvl": 0.20},
+    "balanced":      {"apy": 0.40, "risk": 0.35, "tvl": 0.25},
+    "highest_yield": {"apy": 0.70, "risk": 0.20, "tvl": 0.10},
+}
+# Legacy constants kept for any direct references in tests/docs.
 WEIGHT_APY = 0.5
 WEIGHT_RISK = 0.3
 WEIGHT_TVL = 0.2
@@ -218,12 +225,19 @@ class DecisionAgent:
 
     def score_pools(self, pools: List[Dict[str, Any]], criteria: Dict[str, Any]) -> List[Dict[str, Any]]:
         """
-        Score and rank pools using the deterministic formula:
-          score = WEIGHT_APY * normalized_apy + WEIGHT_RISK * normalized_risk_score + WEIGHT_TVL * normalized_tvl
-        Normalize each variable to [0, 1] over the candidate set. Reproducible for same policy + data.
+        Score and rank pools using a preference-aware deterministic formula:
+          score = w_apy * normalized_apy + w_risk * normalized_risk_score + w_tvl * normalized_tvl
+        Weights vary by mandate preference (safest / balanced / highest_yield).
+        Normalize each variable to [0, 1] over the candidate set. Same policy + same data => same ranking.
         """
         if not pools:
             return []
+
+        preference = (criteria.get("preference") or "balanced").lower()
+        weights = PREFERENCE_WEIGHTS.get(preference, PREFERENCE_WEIGHTS["balanced"])
+        w_apy = weights["apy"]
+        w_risk = weights["risk"]
+        w_tvl = weights["tvl"]
 
         apys = [p.get("apy", 0) or 0 for p in pools]
         risk_scores = [
@@ -237,17 +251,14 @@ class DecisionAgent:
 
         scored_pools = []
         for i, pool in enumerate(pools):
-            total_score = (
-                WEIGHT_APY * norm_apy[i]
-                + WEIGHT_RISK * norm_risk[i]
-                + WEIGHT_TVL * norm_tvl[i]
-            )
+            total_score = w_apy * norm_apy[i] + w_risk * norm_risk[i] + w_tvl * norm_tvl[i]
             pool["totalScore"] = round(total_score, 4)
             pool["scoreFactors"] = {
                 "normalized_apy": norm_apy[i],
                 "normalized_risk_score": norm_risk[i],
                 "normalized_tvl": norm_tvl[i],
-                "weights": {"apy": WEIGHT_APY, "risk": WEIGHT_RISK, "tvl": WEIGHT_TVL},
+                "weights": {"apy": w_apy, "risk": w_risk, "tvl": w_tvl},
+                "preference": preference,
             }
             scored_pools.append(pool)
 
@@ -285,16 +296,28 @@ class DecisionAgent:
             "timestamp": datetime.now().isoformat(),
         })
 
+        score_factors = optimal_pool.get("scoreFactors", {})
+        actual_weights = score_factors.get("weights", {"apy": WEIGHT_APY, "risk": WEIGHT_RISK, "tvl": WEIGHT_TVL})
+        actual_preference = score_factors.get("preference", user_criteria.get("preference", "balanced"))
+        w_apy = actual_weights.get("apy", WEIGHT_APY)
+        w_risk = actual_weights.get("risk", WEIGHT_RISK)
+        w_tvl = actual_weights.get("tvl", WEIGHT_TVL)
+
         trace.append({
             "step": 2,
             "agent": "DecisionAgent",
             "action": "score_pools",
-            "input": {"poolsToScore": len(all_pools)},
+            "input": {"poolsToScore": len(all_pools), "preference": actual_preference},
             "output": {
-                "scoringFactors": list(optimal_pool.get("scoreFactors", {}).keys()),
+                "scoringFactors": list(score_factors.keys()),
                 "topScores": [{"id": p.get("id", "unknown"), "score": p.get("totalScore", 0)} for p in all_pools[:3]],
+                "weights": actual_weights,
             },
-            "reasoning": f"Scored pools using deterministic formula: score = {WEIGHT_APY}*norm_apy + {WEIGHT_RISK}*norm_risk + {WEIGHT_TVL}*norm_tvl (each normalized to [0,1])",
+            "reasoning": (
+                f"Scored using '{actual_preference}' preference: "
+                f"score = {w_apy}*norm_apy + {w_risk}*norm_risk + {w_tvl}*norm_tvl "
+                f"(each normalized to [0,1] over candidate set)"
+            ),
             "timestamp": datetime.now().isoformat(),
         })
 
