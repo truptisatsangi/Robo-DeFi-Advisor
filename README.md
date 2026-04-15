@@ -1,5 +1,7 @@
 # 🎯 Robo DeFi Advisor — DAO Treasury Management Module (MVP-First)
 
+**Try it here: https://robo-defi-advisor-frontend.onrender.com/**
+
 [![ASI Alliance](https://img.shields.io/badge/ASI%20Alliance-Powered-blue)](https://asi.foundation/)
 [![uAgents](https://img.shields.io/badge/uAgents-Framework-green)](https://github.com/fetchai/uagents)
 [![AgentVerse](https://img.shields.io/badge/AgentVerse-Platform-orange)](https://agentverse.ai/)
@@ -73,6 +75,7 @@ The codebase currently includes a full **Phase 1 MVP treasury recommendation pip
 There are two ways to interact with the system:
 
 **Flow 1 — ASI Chat interface (`main.py`)**
+
 ```
 User
    ↓ natural language message
@@ -90,6 +93,7 @@ Treasury Agent → ASI:One → User (formatted response)
 ```
 
 **Flow 2 — REST API (`api/app.py`, used by the frontend)**
+
 ```
 User / Frontend
    ↓ POST /api/recommendations/run  { mandate_id }
@@ -138,12 +142,15 @@ JSON response to frontend
 This describes the **REST API / frontend flow** (`POST /api/recommendations/run`), which is the primary path used by the dashboard.
 
 ### Example Request:
+
 ```json
 { "mandate_id": "test-mandate-001", "amount_usd": 100000 }
 ```
+
 This describes the **REST API / frontend flow** (`POST /api/recommendations/run`), which is the primary path used by the dashboard.
 
 ### Example Request:
+
 ```json
 { "mandate_id": "test-mandate-001", "amount_usd": 100000 }
 ```
@@ -173,24 +180,28 @@ This describes the **REST API / frontend flow** (`POST /api/recommendations/run`
 ### Installation
 
 1. **Clone the repository**
+
    ```bash
    git clone <repository-url>
    cd Robo-DeFi-Advisor
    ```
 
 2. **Set up virtual environment**
+
    ```bash
    python -m venv venv
    source venv/bin/activate  # On Windows: venv\Scripts\activate
    ```
 
 3. **Install dependencies**
+
    ```bash
    pip install -r requirements.txt
    ```
 
 4. **Set up environment variables** — create a `.env` file in the project root:
-4. **Set up environment variables** — create a `.env` file in the project root:
+5. **Set up environment variables** — create a `.env` file in the project root:
+
    ```bash
    ASI_ONE_API_KEY=your_asi_one_api_key       # used by Discovery Agent for intent extraction (asi1-mini LLM)
    AGENTVERSE_API_KEY=your_agentverse_api_key  # used for agent registration on Agentverse
@@ -198,7 +209,8 @@ This describes the **REST API / frontend flow** (`POST /api/recommendations/run`
    AGENTVERSE_API_KEY=your_agentverse_api_key  # used for agent registration on Agentverse
    ```
 
-5. **Start all agents** (for ASI Chat flow):
+6. **Start all agents** (for ASI Chat flow):
+
    ```bash
    # Terminal 1 — Treasury Agent (ASI Chat entry point)
    python main.py
@@ -213,7 +225,7 @@ This describes the **REST API / frontend flow** (`POST /api/recommendations/run`
    python agents/decision_agent/agent.py
    ```
 
-6. **Run treasury MVP tests**
+7. **Run treasury MVP tests**
    ```bash
    python3 -m pytest tests/
    ```
@@ -307,12 +319,12 @@ This split is deliberate: institutional trust requires proving policy discipline
 
 ### Port Assignments
 
-| Agent | Port | Endpoint | Purpose |
-|-------|------|----------|---------|
-| Main Agent | 8004 | `http://localhost:8004/submit` | ASI Chat interface |
-| Discovery Agent | 8007 | `http://localhost:8007/submit` | Pool discovery |
-| Risk Agent | 8002 | `http://localhost:8002/submit` | Risk analysis |
-| Decision Agent | 8005 | `http://localhost:8005/submit` | Final decisions |
+| Agent           | Port | Endpoint                       | Purpose            |
+| --------------- | ---- | ------------------------------ | ------------------ |
+| Main Agent      | 8004 | `http://localhost:8004/submit` | ASI Chat interface |
+| Discovery Agent | 8007 | `http://localhost:8007/submit` | Pool discovery     |
+| Risk Agent      | 8002 | `http://localhost:8002/submit` | Risk analysis      |
+| Decision Agent  | 8005 | `http://localhost:8005/submit` | Final decisions    |
 
 ### Agent Addresses
 
@@ -347,6 +359,7 @@ The system now provides beautiful, user-friendly responses in ASI Chat:
 ```
 
 ### Features:
+
 - ✅ **Color-coded risk levels** with emojis
 - ✅ **Shortened pool IDs** for readability
 - ✅ **Structured information** with clear sections
@@ -371,10 +384,13 @@ The system now provides beautiful, user-friendly responses in ASI Chat:
 ## 💬 Interaction Examples
 
 ### User Input:
+
 > "Invest $1000 in a way to get at least 8% APY. I prefer stablecoins and low risk."
 
 ### Intent extracted by Discovery Agent (asi1-mini LLM):
+
 ### Intent extracted by Discovery Agent (asi1-mini LLM):
+
 ```json
 {
   "action": "invest",
@@ -392,6 +408,7 @@ The system now provides beautiful, user-friendly responses in ASI Chat:
 ```
 
 ### Final Response (ASI Chat):
+
 ```
 🎯 **INVESTMENT RECOMMENDATION** 🎯
 
@@ -434,6 +451,7 @@ This pool has a LOW risk profile. ✓ Excellent liquidity with $1,200,000,000 TV
 ---
 *Powered by DeFi Risk Advisor*
 ```
+
 > **Note**: Pool IDs are DeFiLlama UUIDs, not on-chain contract addresses. Contract verification and audit data shown in risk factors depend on MeTTa availability.
 
 ## 📄 Sample End Output
@@ -454,7 +472,7 @@ This is what the API returns under `recommendation.allocation`:
       "risk_score": 82,
       "risk_level": "low",
       "pct": 40.0,
-      "amount_usd": 40000.00,
+      "amount_usd": 40000.0,
       "tvl": 1200000000,
       "url": "https://defillama.com/yields/pool/...",
       "explanation": "APY 8.2% is within mandate bounds [3%–20%]. Protocol aave-v3 is on the approved list. Risk score 82 passes minimum 60."
@@ -466,7 +484,7 @@ This is what the API returns under `recommendation.allocation`:
       "risk_score": 78,
       "risk_level": "low",
       "pct": 35.0,
-      "amount_usd": 35000.00,
+      "amount_usd": 35000.0,
       "tvl": 800000000,
       "url": "https://defillama.com/yields/pool/...",
       "explanation": "APY 6.9% is within mandate bounds. Protocol compound-v3 is on the approved list. Risk score 78 passes minimum 60."
@@ -478,14 +496,14 @@ This is what the API returns under `recommendation.allocation`:
       "risk_score": 75,
       "risk_level": "low",
       "pct": 25.0,
-      "amount_usd": 25000.00,
+      "amount_usd": 25000.0,
       "tvl": 500000000,
       "url": "https://defillama.com/yields/pool/...",
       "explanation": "APY 5.4% is within mandate bounds. Protocol curve is on the approved list. Risk score 75 passes minimum 60."
     }
   ],
   "expected_portfolio_apy": 7.14,
-  "total_allocated_usd": 100000.00
+  "total_allocated_usd": 100000.0
 }
 ```
 
@@ -503,38 +521,46 @@ This is what the API returns under `proposal_draft` — ready to paste into Snap
 Allocate **$100,000** from treasury across **3 pools**.
 
 ### Portfolio summary
+
 - **Total allocated:** $100,000
 - **Expected portfolio APY:** 7.14%
 - **Number of pools:** 3
 
 ### Allocation breakdown
 
-| Pool / Protocol | Chain    | Allocation | Amount    | APY  | Risk    | Verify       |
-| --------------- | -------- | ---------- | --------- | ---- | ------- | ------------ |
-| aave-v3         | Ethereum | 40.0%      | $40,000   | 8.2% | 82/100  | [View ↗](…) |
-| compound-v3     | Ethereum | 35.0%      | $35,000   | 6.9% | 78/100  | [View ↗](…) |
-| curve           | Ethereum | 25.0%      | $25,000   | 5.4% | 75/100  | [View ↗](…) |
+| Pool / Protocol | Chain    | Allocation | Amount  | APY  | Risk   | Verify      |
+| --------------- | -------- | ---------- | ------- | ---- | ------ | ----------- |
+| aave-v3         | Ethereum | 40.0%      | $40,000 | 8.2% | 82/100 | [View ↗](…) |
+| compound-v3     | Ethereum | 35.0%      | $35,000 | 6.9% | 78/100 | [View ↗](…) |
+| curve           | Ethereum | 25.0%      | $25,000 | 5.4% | 75/100 | [View ↗](…) |
 
 ### Selection rationale
 
 - **aave-v3 (40%):** APY 8.2% is within mandate bounds [3%–20%]. Protocol aave-v3 is on the approved list. Risk score 82 passes minimum 60.
   _Mandate: `test-mandate-001` | Generated (UTC): `12 Apr 2026, 10:30 UTC` | Local: `12 Apr 2026, 16:00 IST`_
+
 ---
+
 - **compound-v3 (35%):** APY 6.9% is within mandate bounds. Protocol compound-v3 is on the approved list. Risk score 78 passes minimum 60.
   _Mandate: `test-mandate-001` | Generated (UTC): `12 Apr 2026, 10:30 UTC` | Local: `12 Apr 2026, 16:00 IST`_
+
 ---
+
 - **curve (25%):** APY 5.4% is within mandate bounds. Protocol curve is on the approved list. Risk score 75 passes minimum 60.
   _Mandate: `test-mandate-001` | Generated (UTC): `12 Apr 2026, 10:30 UTC` | Local: `12 Apr 2026, 16:00 IST`_
+
 ---
 
 ### Mandate & approval
+
 - **Mandate ID:** test-mandate-001
 - **Approval Ref:** dao-vote-2026-03-15
 - **Generated At (UTC):** 12 Apr 2026, 10:30 UTC
 - **Generated At (Local):** 12 Apr 2026, 16:00 IST
 
 ---
-*Generated by RDA Treasury Advisor. Review before publishing.*
+
+_Generated by RDA Treasury Advisor. Review before publishing._
 ```
 
 ## 🧮 Decision Formula and Rationale
@@ -605,6 +631,7 @@ Future work remains focused on **execution safety** and **enterprise trust layer
 ## 🚀 Deployment Guide
 
 ### Local Development
+
 ```bash
 # 1. Activate virtual environment
 source venv/bin/activate
