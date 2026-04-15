@@ -126,7 +126,7 @@ class TreasuryPolicy(BaseModel):
             "max_apy": self.max_apy,
             "target_apy": self.target_apy,
             "preference": self.preference,
-            "min_tvl": self.min_pool_tvl_usd,
+            "min_pool_tvl_usd": self.min_pool_tvl_usd,
             "amount_usd": self.amount_usd,
             "top_n": self.top_n,
         }

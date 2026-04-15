@@ -46,9 +46,8 @@ class DecisionAgent:
 
             print(f"🎯 Decision Agent: Starting with {len(pools)} pools from risk agent")
             
-            # Step 1: Filter pools based on criteria
-            filtered_pools = self.filter_pools_by_criteria(pools, user_criteria)
-            print(f"📊 Decision Agent: {len(filtered_pools)} pools after basic filtering")
+            filtered_pools = [p if isinstance(p, dict) else p.__dict__ for p in pools]
+            print(f"📊 Decision Agent: {len(filtered_pools)} pools received (pre-filtered by discovery + risk)")
 
             # Step 2: Apply risk analysis
             pools_with_risk = self.apply_risk_analysis(filtered_pools, risk_analysis)
