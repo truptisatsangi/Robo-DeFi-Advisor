@@ -2103,3 +2103,642 @@ Generated At (Local): 01 Apr 2026, 11:29 IST
 }
 ----- End Entry -----
 
+===== Treasury Recommendation Entry | UTC: 15 Apr 2026, 17:28 UTC | Local: 15 Apr 2026, 22:58 IST =====
+Mandate: test-mandate-003
+Run ID: 621f0c8c-8950-495d-865c-5685480a43a2
+Generated At (UTC): 15 Apr 2026, 17:28 UTC
+Generated At (Local): 15 Apr 2026, 22:58 IST
+{
+  "run_id": "621f0c8c-8950-495d-865c-5685480a43a2",
+  "mandate_id": "test-mandate-003",
+  "policy_snapshot": {
+    "amount_usd": 500000.0,
+    "min_apy": 2.0,
+    "max_apy": null,
+    "risk": {
+      "max_level": "medium",
+      "min_score": 30
+    },
+    "allowed_protocols": [
+      "aave",
+      "compound",
+      "curve",
+      "uniswap",
+      "balancer",
+      "pendle"
+    ],
+    "allowed_chains": [
+      "ethereum",
+      "arbitrum",
+      "polygon",
+      "optimism",
+      "base"
+    ],
+    "min_pool_tvl_usd": 1000000.0,
+    "max_tvl_per_pool_pct": 40.0,
+    "preference": "highest_yield"
+  },
+  "recommendation_output": {
+    "success": true,
+    "run_id": "621f0c8c-8950-495d-865c-5685480a43a2",
+    "mandate_id": "test-mandate-003",
+    "approval_ref": "manual-test-mandate-003",
+    "recommendation": {
+      "recommended_pools": [],
+      "expected_portfolio_apy": 0,
+      "message": "No pools available for selection"
+    },
+    "proposal_draft": "## Treasury Allocation Proposal\n\nNo pools available for selection",
+    "pipeline_stats": {
+      "discovery": {
+        "total_fetched": 16746,
+        "after_policy_filters": 238,
+        "after_rank_top_n": 10,
+        "after_apy_crosscheck": 10
+      },
+      "risk": {
+        "input_candidates": 10,
+        "after_risk_policy_filters": 10
+      },
+      "decision": {
+        "scored_candidates": 0,
+        "recommended_count": 0
+      },
+      "timestamps": {
+        "started_at_utc": "2026-04-15T17:28:40.018334+00:00",
+        "completed_at_utc": "2026-04-15T17:28:45.501231+00:00"
+      }
+    }
+  },
+  "timestamp": "2026-04-15T17:28:45.501334Z"
+}
+----- End Entry -----
+
+===== Treasury Recommendation Entry | UTC: 15 Apr 2026, 17:29 UTC | Local: 15 Apr 2026, 22:59 IST =====
+Mandate: test-mandate-002
+Run ID: 1aadd944-3ca7-4ff1-bdf6-1ed11767c2b0
+Generated At (UTC): 15 Apr 2026, 17:29 UTC
+Generated At (Local): 15 Apr 2026, 22:59 IST
+{
+  "run_id": "1aadd944-3ca7-4ff1-bdf6-1ed11767c2b0",
+  "mandate_id": "test-mandate-002",
+  "policy_snapshot": {
+    "min_apy": 1.0,
+    "max_apy": null,
+    "risk": {
+      "max_level": "high",
+      "min_score": 20
+    },
+    "allowed_protocols": [
+      "aave",
+      "compound",
+      "curve",
+      "uniswap",
+      "balancer",
+      "pendle"
+    ],
+    "allowed_chains": [
+      "ethereum",
+      "arbitrum",
+      "polygon",
+      "optimism",
+      "base"
+    ],
+    "max_tvl_per_pool_pct": 40.0,
+    "min_pool_tvl_usd": 1000000,
+    "amount_usd": 2000000,
+    "preference": "balanced"
+  },
+  "recommendation_output": {
+    "success": true,
+    "run_id": "1aadd944-3ca7-4ff1-bdf6-1ed11767c2b0",
+    "mandate_id": "test-mandate-002",
+    "approval_ref": "Snapshot proposal #TEST-002",
+    "recommendation": {
+      "recommended_pools": [],
+      "expected_portfolio_apy": 0,
+      "message": "No pools available for selection"
+    },
+    "proposal_draft": "## Treasury Allocation Proposal\n\nNo pools available for selection",
+    "pipeline_stats": {
+      "discovery": {
+        "total_fetched": 16746,
+        "after_policy_filters": 308,
+        "after_rank_top_n": 10,
+        "after_apy_crosscheck": 10
+      },
+      "risk": {
+        "input_candidates": 10,
+        "after_risk_policy_filters": 10
+      },
+      "decision": {
+        "scored_candidates": 0,
+        "recommended_count": 0
+      },
+      "timestamps": {
+        "started_at_utc": "2026-04-15T17:29:05.606174+00:00",
+        "completed_at_utc": "2026-04-15T17:29:06.882427+00:00"
+      }
+    }
+  },
+  "timestamp": "2026-04-15T17:29:06.882526Z"
+}
+----- End Entry -----
+
+===== Treasury Recommendation Entry | UTC: 15 Apr 2026, 17:29 UTC | Local: 15 Apr 2026, 22:59 IST =====
+Mandate: test-mandate-002
+Run ID: ceec681e-e69c-42d4-b6ce-07dcc055e1f0
+Generated At (UTC): 15 Apr 2026, 17:29 UTC
+Generated At (Local): 15 Apr 2026, 22:59 IST
+{
+  "run_id": "ceec681e-e69c-42d4-b6ce-07dcc055e1f0",
+  "mandate_id": "test-mandate-002",
+  "policy_snapshot": {
+    "min_apy": 1.0,
+    "max_apy": null,
+    "risk": {
+      "max_level": "high",
+      "min_score": 20
+    },
+    "allowed_protocols": [
+      "aave",
+      "compound",
+      "curve",
+      "uniswap",
+      "balancer",
+      "pendle"
+    ],
+    "allowed_chains": [
+      "ethereum",
+      "arbitrum",
+      "polygon",
+      "optimism",
+      "base"
+    ],
+    "max_tvl_per_pool_pct": 40.0,
+    "min_pool_tvl_usd": 1000000,
+    "amount_usd": 2000000,
+    "preference": "balanced"
+  },
+  "recommendation_output": {
+    "success": true,
+    "run_id": "ceec681e-e69c-42d4-b6ce-07dcc055e1f0",
+    "mandate_id": "test-mandate-002",
+    "approval_ref": "Snapshot proposal #TEST-002",
+    "recommendation": {
+      "recommended_pools": [],
+      "expected_portfolio_apy": 0,
+      "message": "No pools available for selection"
+    },
+    "proposal_draft": "## Treasury Allocation Proposal\n\nNo pools available for selection",
+    "pipeline_stats": {
+      "discovery": {
+        "total_fetched": 16746,
+        "after_policy_filters": 308,
+        "after_rank_top_n": 10,
+        "after_apy_crosscheck": 10
+      },
+      "risk": {
+        "input_candidates": 10,
+        "after_risk_policy_filters": 10
+      },
+      "decision": {
+        "scored_candidates": 0,
+        "recommended_count": 0
+      },
+      "timestamps": {
+        "started_at_utc": "2026-04-15T17:29:15.422026+00:00",
+        "completed_at_utc": "2026-04-15T17:29:19.987696+00:00"
+      }
+    }
+  },
+  "timestamp": "2026-04-15T17:29:19.987755Z"
+}
+----- End Entry -----
+
+===== Treasury Recommendation Entry | UTC: 15 Apr 2026, 17:29 UTC | Local: 15 Apr 2026, 22:59 IST =====
+Mandate: test-mandate-003
+Run ID: f27292ea-4031-413a-9177-1831e7af033a
+Generated At (UTC): 15 Apr 2026, 17:29 UTC
+Generated At (Local): 15 Apr 2026, 22:59 IST
+{
+  "run_id": "f27292ea-4031-413a-9177-1831e7af033a",
+  "mandate_id": "test-mandate-003",
+  "policy_snapshot": {
+    "amount_usd": 500000.0,
+    "min_apy": 2.0,
+    "max_apy": null,
+    "risk": {
+      "max_level": "medium",
+      "min_score": 30
+    },
+    "allowed_protocols": [
+      "aave",
+      "compound",
+      "curve",
+      "uniswap",
+      "balancer",
+      "pendle"
+    ],
+    "allowed_chains": [
+      "ethereum",
+      "arbitrum",
+      "polygon",
+      "optimism",
+      "base"
+    ],
+    "min_pool_tvl_usd": 1000000.0,
+    "max_tvl_per_pool_pct": 40.0,
+    "preference": "highest_yield"
+  },
+  "recommendation_output": {
+    "success": true,
+    "run_id": "f27292ea-4031-413a-9177-1831e7af033a",
+    "mandate_id": "test-mandate-003",
+    "approval_ref": "manual-test-mandate-003",
+    "recommendation": {
+      "recommended_pools": [],
+      "expected_portfolio_apy": 0,
+      "message": "No pools available for selection"
+    },
+    "proposal_draft": "## Treasury Allocation Proposal\n\nNo pools available for selection",
+    "pipeline_stats": {
+      "discovery": {
+        "total_fetched": 16746,
+        "after_policy_filters": 238,
+        "after_rank_top_n": 10,
+        "after_apy_crosscheck": 10
+      },
+      "risk": {
+        "input_candidates": 10,
+        "after_risk_policy_filters": 10
+      },
+      "decision": {
+        "scored_candidates": 0,
+        "recommended_count": 0
+      },
+      "timestamps": {
+        "started_at_utc": "2026-04-15T17:29:30.715746+00:00",
+        "completed_at_utc": "2026-04-15T17:29:31.849046+00:00"
+      }
+    }
+  },
+  "timestamp": "2026-04-15T17:29:31.849120Z"
+}
+----- End Entry -----
+
+===== Treasury Recommendation Entry | UTC: 15 Apr 2026, 17:29 UTC | Local: 15 Apr 2026, 22:59 IST =====
+Mandate: test-mandate-001
+Run ID: 5466843d-f484-4a7f-898d-eb6a161d396e
+Generated At (UTC): 15 Apr 2026, 17:29 UTC
+Generated At (Local): 15 Apr 2026, 22:59 IST
+{
+  "run_id": "5466843d-f484-4a7f-898d-eb6a161d396e",
+  "mandate_id": "test-mandate-001",
+  "policy_snapshot": {
+    "min_apy": 1.0,
+    "max_apy": null,
+    "risk": {
+      "max_level": "high",
+      "min_score": 20
+    },
+    "allowed_protocols": [
+      "aave",
+      "compound",
+      "curve",
+      "uniswap",
+      "balancer",
+      "pendle"
+    ],
+    "allowed_chains": [
+      "ethereum",
+      "arbitrum",
+      "polygon",
+      "optimism",
+      "base"
+    ],
+    "max_tvl_per_pool_pct": 40.0,
+    "min_pool_tvl_usd": 1000000,
+    "amount_usd": 100000,
+    "preference": "balanced"
+  },
+  "recommendation_output": {
+    "success": true,
+    "run_id": "5466843d-f484-4a7f-898d-eb6a161d396e",
+    "mandate_id": "test-mandate-001",
+    "approval_ref": "Snapshot proposal #TEST-001",
+    "recommendation": {
+      "recommended_pools": [],
+      "expected_portfolio_apy": 0,
+      "message": "No pools available for selection"
+    },
+    "proposal_draft": "## Treasury Allocation Proposal\n\nNo pools available for selection",
+    "pipeline_stats": {
+      "discovery": {
+        "total_fetched": 16746,
+        "after_policy_filters": 308,
+        "after_rank_top_n": 10,
+        "after_apy_crosscheck": 10
+      },
+      "risk": {
+        "input_candidates": 10,
+        "after_risk_policy_filters": 10
+      },
+      "decision": {
+        "scored_candidates": 0,
+        "recommended_count": 0
+      },
+      "timestamps": {
+        "started_at_utc": "2026-04-15T17:29:36.896235+00:00",
+        "completed_at_utc": "2026-04-15T17:29:37.990414+00:00"
+      }
+    }
+  },
+  "timestamp": "2026-04-15T17:29:37.990472Z"
+}
+----- End Entry -----
+
+===== Treasury Recommendation Entry | UTC: 15 Apr 2026, 17:30 UTC | Local: 15 Apr 2026, 23:00 IST =====
+Mandate: test-mandate-001
+Run ID: c8344881-b0c6-473f-a362-0f969874745d
+Generated At (UTC): 15 Apr 2026, 17:30 UTC
+Generated At (Local): 15 Apr 2026, 23:00 IST
+{
+  "run_id": "c8344881-b0c6-473f-a362-0f969874745d",
+  "mandate_id": "test-mandate-001",
+  "policy_snapshot": {
+    "min_apy": 1.0,
+    "max_apy": null,
+    "risk": {
+      "max_level": "high",
+      "min_score": 20
+    },
+    "allowed_protocols": [
+      "aave",
+      "compound",
+      "curve",
+      "uniswap",
+      "balancer",
+      "pendle"
+    ],
+    "allowed_chains": [
+      "ethereum",
+      "arbitrum",
+      "polygon",
+      "optimism",
+      "base"
+    ],
+    "max_tvl_per_pool_pct": 40.0,
+    "min_pool_tvl_usd": 1000000,
+    "amount_usd": 100000,
+    "preference": "balanced"
+  },
+  "recommendation_output": {
+    "success": true,
+    "run_id": "c8344881-b0c6-473f-a362-0f969874745d",
+    "mandate_id": "test-mandate-001",
+    "approval_ref": "Snapshot proposal #TEST-001",
+    "recommendation": {
+      "recommended_pools": [],
+      "expected_portfolio_apy": 0,
+      "message": "No pools available for selection"
+    },
+    "proposal_draft": "## Treasury Allocation Proposal\n\nNo pools available for selection",
+    "pipeline_stats": {
+      "discovery": {
+        "total_fetched": 16746,
+        "after_policy_filters": 308,
+        "after_rank_top_n": 10,
+        "after_apy_crosscheck": 10
+      },
+      "risk": {
+        "input_candidates": 10,
+        "after_risk_policy_filters": 10
+      },
+      "decision": {
+        "scored_candidates": 0,
+        "recommended_count": 0
+      },
+      "timestamps": {
+        "started_at_utc": "2026-04-15T17:30:46.992793+00:00",
+        "completed_at_utc": "2026-04-15T17:30:48.855697+00:00"
+      }
+    }
+  },
+  "timestamp": "2026-04-15T17:30:48.855754Z"
+}
+----- End Entry -----
+
+===== Treasury Recommendation Entry | UTC: 15 Apr 2026, 17:31 UTC | Local: 15 Apr 2026, 23:01 IST =====
+Mandate: test-mandate-002
+Run ID: 3b8f1914-f0f4-4af7-b99b-f72a2d083367
+Generated At (UTC): 15 Apr 2026, 17:31 UTC
+Generated At (Local): 15 Apr 2026, 23:01 IST
+{
+  "run_id": "3b8f1914-f0f4-4af7-b99b-f72a2d083367",
+  "mandate_id": "test-mandate-002",
+  "policy_snapshot": {
+    "min_apy": 1.0,
+    "max_apy": null,
+    "risk": {
+      "max_level": "high",
+      "min_score": 20
+    },
+    "allowed_protocols": [
+      "aave",
+      "compound",
+      "curve",
+      "uniswap",
+      "balancer",
+      "pendle"
+    ],
+    "allowed_chains": [
+      "ethereum",
+      "arbitrum",
+      "polygon",
+      "optimism",
+      "base"
+    ],
+    "max_tvl_per_pool_pct": 40.0,
+    "min_pool_tvl_usd": 1000000,
+    "amount_usd": 2000000,
+    "preference": "balanced"
+  },
+  "recommendation_output": {
+    "success": true,
+    "run_id": "3b8f1914-f0f4-4af7-b99b-f72a2d083367",
+    "mandate_id": "test-mandate-002",
+    "approval_ref": "Snapshot proposal #TEST-002",
+    "recommendation": {
+      "recommended_pools": [],
+      "expected_portfolio_apy": 0,
+      "message": "No pools available for selection"
+    },
+    "proposal_draft": "## Treasury Allocation Proposal\n\nNo pools available for selection",
+    "pipeline_stats": {
+      "discovery": {
+        "total_fetched": 16746,
+        "after_policy_filters": 308,
+        "after_rank_top_n": 10,
+        "after_apy_crosscheck": 10
+      },
+      "risk": {
+        "input_candidates": 10,
+        "after_risk_policy_filters": 10
+      },
+      "decision": {
+        "scored_candidates": 0,
+        "recommended_count": 0
+      },
+      "timestamps": {
+        "started_at_utc": "2026-04-15T17:31:12.973432+00:00",
+        "completed_at_utc": "2026-04-15T17:31:14.603278+00:00"
+      }
+    }
+  },
+  "timestamp": "2026-04-15T17:31:14.603333Z"
+}
+----- End Entry -----
+
+===== Treasury Recommendation Entry | UTC: 15 Apr 2026, 17:31 UTC | Local: 15 Apr 2026, 23:01 IST =====
+Mandate: test-mandate-003
+Run ID: 8d768f0d-a354-4acb-ab91-9c33e235e4b3
+Generated At (UTC): 15 Apr 2026, 17:31 UTC
+Generated At (Local): 15 Apr 2026, 23:01 IST
+{
+  "run_id": "8d768f0d-a354-4acb-ab91-9c33e235e4b3",
+  "mandate_id": "test-mandate-003",
+  "policy_snapshot": {
+    "amount_usd": 500000.0,
+    "min_apy": 2.0,
+    "max_apy": null,
+    "risk": {
+      "max_level": "medium",
+      "min_score": 30
+    },
+    "allowed_protocols": [
+      "aave",
+      "compound",
+      "curve",
+      "uniswap",
+      "balancer",
+      "pendle"
+    ],
+    "allowed_chains": [
+      "ethereum",
+      "arbitrum",
+      "polygon",
+      "optimism",
+      "base"
+    ],
+    "min_pool_tvl_usd": 1000000.0,
+    "max_tvl_per_pool_pct": 40.0,
+    "preference": "highest_yield"
+  },
+  "recommendation_output": {
+    "success": true,
+    "run_id": "8d768f0d-a354-4acb-ab91-9c33e235e4b3",
+    "mandate_id": "test-mandate-003",
+    "approval_ref": "manual-test-mandate-003",
+    "recommendation": {
+      "recommended_pools": [],
+      "expected_portfolio_apy": 0,
+      "message": "No pools available for selection"
+    },
+    "proposal_draft": "## Treasury Allocation Proposal\n\nNo pools available for selection",
+    "pipeline_stats": {
+      "discovery": {
+        "total_fetched": 16746,
+        "after_policy_filters": 238,
+        "after_rank_top_n": 10,
+        "after_apy_crosscheck": 10
+      },
+      "risk": {
+        "input_candidates": 10,
+        "after_risk_policy_filters": 10
+      },
+      "decision": {
+        "scored_candidates": 0,
+        "recommended_count": 0
+      },
+      "timestamps": {
+        "started_at_utc": "2026-04-15T17:31:21.962023+00:00",
+        "completed_at_utc": "2026-04-15T17:31:23.326941+00:00"
+      }
+    }
+  },
+  "timestamp": "2026-04-15T17:31:23.326993Z"
+}
+----- End Entry -----
+
+===== Treasury Recommendation Entry | UTC: 15 Apr 2026, 17:31 UTC | Local: 15 Apr 2026, 23:01 IST =====
+Mandate: test-mandate-003
+Run ID: a6144e9d-0083-47aa-9813-393a5c96c73d
+Generated At (UTC): 15 Apr 2026, 17:31 UTC
+Generated At (Local): 15 Apr 2026, 23:01 IST
+{
+  "run_id": "a6144e9d-0083-47aa-9813-393a5c96c73d",
+  "mandate_id": "test-mandate-003",
+  "policy_snapshot": {
+    "amount_usd": 500000.0,
+    "min_apy": 2.0,
+    "max_apy": null,
+    "risk": {
+      "max_level": "medium",
+      "min_score": 30
+    },
+    "allowed_protocols": [
+      "aave",
+      "compound",
+      "curve",
+      "uniswap",
+      "balancer",
+      "pendle"
+    ],
+    "allowed_chains": [
+      "ethereum",
+      "arbitrum",
+      "polygon",
+      "optimism",
+      "base"
+    ],
+    "min_pool_tvl_usd": 1000000.0,
+    "max_tvl_per_pool_pct": 40.0,
+    "preference": "highest_yield"
+  },
+  "recommendation_output": {
+    "success": true,
+    "run_id": "a6144e9d-0083-47aa-9813-393a5c96c73d",
+    "mandate_id": "test-mandate-003",
+    "approval_ref": "manual-test-mandate-003",
+    "recommendation": {
+      "recommended_pools": [],
+      "expected_portfolio_apy": 0,
+      "message": "No pools available for selection"
+    },
+    "proposal_draft": "## Treasury Allocation Proposal\n\nNo pools available for selection",
+    "pipeline_stats": {
+      "discovery": {
+        "total_fetched": 16746,
+        "after_policy_filters": 238,
+        "after_rank_top_n": 10,
+        "after_apy_crosscheck": 10
+      },
+      "risk": {
+        "input_candidates": 10,
+        "after_risk_policy_filters": 10
+      },
+      "decision": {
+        "scored_candidates": 0,
+        "recommended_count": 0
+      },
+      "timestamps": {
+        "started_at_utc": "2026-04-15T17:31:26.531284+00:00",
+        "completed_at_utc": "2026-04-15T17:31:31.295482+00:00"
+      }
+    }
+  },
+  "timestamp": "2026-04-15T17:31:31.295541Z"
+}
+----- End Entry -----
+

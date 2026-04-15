@@ -19,20 +19,31 @@ function DashboardPage() {
     mutationFn: api.runRecommendation
   });
 
-  const activeResult = runMutation.data || latestRunQuery.data;
+  // prefer the fresh mutation result; fall back to last persisted run
+  const mutationResult = runMutation.data;
+  const activeResult = mutationResult || latestRunQuery.data;
   const recommendation = activeResult?.recommendation || {};
   const allocation = recommendation?.allocation || [];
   const pipelineStats = activeResult?.pipeline_stats;
-  const runError = runMutation.error?.message;
+
+  // network-level error (fetch failed entirely)
+  const networkError = runMutation.error?.message;
+  // API-level error: request succeeded but pipeline returned success:false
+  const apiError = mutationResult?.success === false ? mutationResult.error : null;
   const loadError = latestRunQuery.error?.message;
 
   return (
     <div className="space-y-4">
       <TrustStrip />
       <RunForm onRun={runMutation.mutate} isLoading={runMutation.isPending} />
-      {runError ? (
+      {networkError ? (
         <section className="card border-red-700 bg-red-950/30 text-sm text-red-200">
-          Run request failed: {runError}
+          Run request failed: {networkError}
+        </section>
+      ) : null}
+      {apiError ? (
+        <section className="card border-red-700 bg-red-950/30 text-sm text-red-200">
+          <span className="font-semibold">Pipeline error:</span> {apiError}
         </section>
       ) : null}
       {!runMutation.data && loadError ? (

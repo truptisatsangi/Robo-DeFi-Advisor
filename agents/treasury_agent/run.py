@@ -111,6 +111,7 @@ async def run_treasury_recommendation(
         return {
             "success": False,
             "run_id": run_id,
+            "mandate_id": mandate_id,
             "error": str(e),
             "renewal_required": False,
             "recommendation": None,
@@ -121,6 +122,7 @@ async def run_treasury_recommendation(
         return {
             "success": False,
             "run_id": run_id,
+            "mandate_id": mandate_id,
             "error": str(e),
             "renewal_required": True,
             "recommendation": None,
@@ -137,6 +139,7 @@ async def run_treasury_recommendation(
         return {
             "success": False,
             "run_id": run_id,
+            "mandate_id": mandate_id,
             "error": f"Invalid mandate policy: {e}",
             "recommendation": None,
             "proposal_draft": None,
@@ -151,6 +154,7 @@ async def run_treasury_recommendation(
             return {
                 "success": False,
                 "run_id": run_id,
+                "mandate_id": mandate_id,
                 "error": f"Unknown protocols in policy: {invalid_names}. Use protocol registry names.",
                 "recommendation": None,
                 "proposal_draft": None,

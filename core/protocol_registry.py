@@ -63,6 +63,42 @@ PROTOCOL_REGISTRY: dict[str, ProtocolEntry] = {
         audit_age_months=15,
         default_risk_category="medium",
     ),
+    "uniswap": ProtocolEntry(
+        name="uniswap",
+        display_name="Uniswap V3",
+        supported_chains=["ethereum", "arbitrum", "polygon", "optimism", "base", "avalanche", "bsc"],
+        protocol_type="dex",
+        audit_status="audited",
+        audit_age_months=18,
+        default_risk_category="low",
+    ),
+    "balancer": ProtocolEntry(
+        name="balancer",
+        display_name="Balancer V2",
+        supported_chains=["ethereum", "arbitrum", "polygon", "optimism", "base", "avalanche", "gnosis"],
+        protocol_type="dex",
+        audit_status="audited",
+        audit_age_months=14,
+        default_risk_category="low",
+    ),
+    "pendle": ProtocolEntry(
+        name="pendle",
+        display_name="Pendle V2",
+        supported_chains=["ethereum", "arbitrum", "base", "bsc"],
+        protocol_type="yield_aggregator",
+        audit_status="audited",
+        audit_age_months=10,
+        default_risk_category="medium",
+    ),
+    "lido": ProtocolEntry(
+        name="lido",
+        display_name="Lido",
+        supported_chains=["ethereum"],
+        protocol_type="restaking",
+        audit_status="audited",
+        audit_age_months=6,
+        default_risk_category="low",
+    ),
 }
 
 # Aliases for common protocol name variants (DeFiLlama may return "aave-v3", etc.)
@@ -73,6 +109,12 @@ for _alias, _canonical in [
     ("compound-v3", "compound"),
     ("curve-dex", "curve"),
     ("yearn-finance", "yearn"),
+    ("uniswap-v2", "uniswap"),
+    ("uniswap-v3", "uniswap"),
+    ("balancer-v2", "balancer"),
+    ("balancer-v3", "balancer"),
+    ("pendle-v2", "pendle"),
+    ("lido-staked-ether", "lido"),
 ]:
     if _canonical in PROTOCOL_REGISTRY and _alias not in PROTOCOL_REGISTRY:
         PROTOCOL_REGISTRY[_alias] = PROTOCOL_REGISTRY[_canonical]

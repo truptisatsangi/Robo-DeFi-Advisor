@@ -1,0 +1,36 @@
+{
+  "mandate_id": "test-mandate-003",
+  "mandate_version": 1,
+  "dao_id": "Test DAO",
+  "dao_name": "Test DAO",
+  "approval_ref": "manual-test-mandate-003",
+  "valid_from": "2026-04-15",
+  "valid_until": "2026-06-15",
+  "policy": {
+    "amount_usd": 500000.0,
+    "min_apy": 2.0,
+    "max_apy": null,
+    "risk": {
+      "max_level": "medium",
+      "min_score": 30
+    },
+    "allowed_protocols": [
+      "aave",
+      "compound",
+      "curve",
+      "uniswap",
+      "balancer",
+      "pendle"
+    ],
+    "allowed_chains": [
+      "ethereum",
+      "arbitrum",
+      "polygon",
+      "optimism",
+      "base"
+    ],
+    "min_pool_tvl_usd": 1000000.0,
+    "max_tvl_per_pool_pct": 40.0,
+    "preference": "highest_yield"
+  }
+}
