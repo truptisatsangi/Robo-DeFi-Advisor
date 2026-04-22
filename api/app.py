@@ -19,6 +19,7 @@ if str(_root) not in sys.path:
 from agents.treasury_agent.run import run_treasury_recommendation
 from core.audit import (
     get_latest_recommendation,
+    get_latest_recommendation_for_mandate,
     get_recommendation_by_run_id,
     read_recommendation_entries,
 )
@@ -132,6 +133,19 @@ def get_mandate_by_id(mandate_id: str, dao_id: Optional[str] = Query(default=Non
         return get_mandate(mandate_id, dao_id=dao_id)
     except MandateNotFoundError as e:
         raise HTTPException(status_code=404, detail=str(e))
+
+
+@app.get("/api/runs/default")
+def get_default_run() -> Dict[str, Any]:
+    """Returns the latest run for test-mandate-001 as the default dashboard view."""
+    entry = get_latest_recommendation_for_mandate("test-mandate-001")
+    if not entry:
+        raise HTTPException(status_code=404, detail="No default run found")
+    output = dict(entry.get("recommendation_output") or {})
+    output.setdefault("run_id", entry.get("run_id"))
+    output.setdefault("mandate_id", entry.get("mandate_id"))
+    output["audit_timestamp"] = entry.get("timestamp")
+    return output
 
 
 @app.get("/api/runs/latest")

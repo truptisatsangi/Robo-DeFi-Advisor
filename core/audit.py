@@ -132,3 +132,12 @@ def get_latest_recommendation() -> Optional[Dict[str, Any]]:
     """Return the most recent recommendation entry."""
     entries = read_recommendation_entries(limit=1)
     return entries[0] if entries else None
+
+
+def get_latest_recommendation_for_mandate(mandate_id: str) -> Optional[Dict[str, Any]]:
+    """Return the most recent recommendation entry for a specific mandate_id."""
+    entries = read_recommendation_entries()
+    for entry in reversed(entries):
+        if entry.get("mandate_id") == mandate_id:
+            return entry
+    return None

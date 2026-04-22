@@ -10,8 +10,8 @@ import { api } from "../lib/api";
 
 function DashboardPage() {
   const latestRunQuery = useQuery({
-    queryKey: ["latestRun"],
-    queryFn: api.getLatestRun,
+    queryKey: ["defaultRun"],
+    queryFn: api.getDefaultRun,
     retry: false
   });
 

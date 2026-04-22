@@ -26,6 +26,7 @@ export const api = {
       method: "POST",
       body: JSON.stringify(payload)
     }),
+  getDefaultRun: () => fetchJson("/api/runs/default"),
   getLatestRun: () => fetchJson("/api/runs/latest"),
   getRunById: (runId) => fetchJson(`/api/runs/${runId}`),
   getMandates: () => fetchJson("/api/mandates"),
