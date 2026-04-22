@@ -37,9 +37,9 @@ app.add_middleware(
         "http://127.0.0.1:5173",
         "http://localhost:4173",
         "http://127.0.0.1:4173",
-        "https://robo-defi-advisor-frontend.onrender.com"
+        "https://robo-defi-advisor-frontend.onrender.com",
         "https://rdaadvisor.com",
-        "https://www.rdaadvisor.com"
+        "https://www.rdaadvisor.com",
     ],
     allow_credentials=True,
     allow_methods=["*"],
