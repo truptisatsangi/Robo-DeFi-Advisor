@@ -12,7 +12,6 @@ function DashboardPage() {
   const latestRunQuery = useQuery({
     queryKey: ["defaultRun"],
     queryFn: api.getDefaultRun,
-    retry: false
   });
 
   const runMutation = useMutation({

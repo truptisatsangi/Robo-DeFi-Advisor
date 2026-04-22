@@ -4,8 +4,9 @@ HTTP API for treasury recommendations and audit retrieval.
 
 import json
 import sys
+import time
 from pathlib import Path
-from typing import Any, Dict, Optional
+from typing import Any, Dict, Optional, Tuple
 
 from fastapi import FastAPI, HTTPException, Query
 from fastapi.middleware.cors import CORSMiddleware
@@ -24,6 +25,28 @@ from core.audit import (
     read_recommendation_entries,
 )
 from core.mandate import MandateNotFoundError, get_mandate, list_mandates, save_mandate
+
+# In-process cache: { cache_key -> (result, cached_at_epoch) }
+# TTL of 5 minutes — DeFi pool data changes slowly enough that this is safe.
+_run_cache: Dict[str, Tuple[Dict[str, Any], float]] = {}
+_CACHE_TTL_SECONDS = 300
+
+
+def _cache_key(mandate_id: str, amount_usd: Optional[float], dao_id: Optional[str]) -> str:
+    return f"{mandate_id}|{amount_usd}|{dao_id}"
+
+
+def _get_cached(key: str) -> Optional[Dict[str, Any]]:
+    entry = _run_cache.get(key)
+    if entry and (time.time() - entry[1]) < _CACHE_TTL_SECONDS:
+        return entry[0]
+    _run_cache.pop(key, None)
+    return None
+
+
+def _set_cached(key: str, result: Dict[str, Any]) -> None:
+    _run_cache[key] = (result, time.time())
+
 
 app = FastAPI(
     title="RDA Treasury API",
@@ -114,11 +137,18 @@ def create_mandate(payload: CreateMandateRequest) -> Dict[str, Any]:
 
 @app.post("/api/recommendations/run")
 async def run_recommendation(payload: RunRecommendationRequest) -> Dict[str, Any]:
-    return await run_treasury_recommendation(
+    key = _cache_key(payload.mandate_id, payload.amount_usd, payload.dao_id)
+    cached = _get_cached(key)
+    if cached:
+        return {**cached, "cached": True}
+    result = await run_treasury_recommendation(
         mandate_id=payload.mandate_id,
         amount_usd=payload.amount_usd,
         dao_id=payload.dao_id,
     )
+    if result.get("success"):
+        _set_cached(key, result)
+    return result
 
 
 @app.get("/api/mandates")
