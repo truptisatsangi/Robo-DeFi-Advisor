@@ -1,6 +1,8 @@
 # Robo DeFi Advisor — DAO Treasury Management
 
-**Try it live: https://robo-defi-advisor-frontend.onrender.com/**
+**Launched here: https://www.producthunt.com/products/rda-robo-defi-advisor**
+
+**Try it live: https://rdaadvisor.com/**
 
 [![ASI Alliance](https://img.shields.io/badge/ASI%20Alliance-Powered-blue)](https://asi.foundation/)
 [![uAgents](https://img.shields.io/badge/uAgents-Framework-green)](https://github.com/fetchai/uagents)
